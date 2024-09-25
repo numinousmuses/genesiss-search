@@ -1,0 +1,146 @@
+@font-face {
+    font-family: 'CreatoLight';
+    src: url('./../fonts/CreatoDisplay-Thin.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+  
+@font-face {
+    font-family: Anurati;
+    src: url("./../fonts/Anurati-Regular.otf") format("opentype");
+}
+
+.header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    margin-top: 10px;
+}
+
+.page {
+    color: white;
+    font-family: CreatoLight;
+}
+
+.logoText, .session{
+    font-size: 1.2rem;
+}
+
+.session{
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    transition: all 500ms;
+    cursor: default;
+}
+
+.page button {
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+    transition: all 300ms;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100px;
+    margin-left: 10px;
+    transition: all 300ms;
+}
+
+.page button:hover {
+    scale: 0.95;
+}
+
+.logospan {
+    color: #00D8DA;
+}
+
+/* Modal styles */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it appears above other content */
+  }
+  
+  .modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px; /* Adjust width as needed */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    color: black;
+  }
+  
+  .modal button {
+    background-color: black;
+    color: white;
+  }
+
+  .modalContent button {
+    width: 150px;
+  }
+
+  .closeButton {
+    padding: 8px 12px;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .closeButton:hover {
+    background: #0056b3;
+  }
+
+  .modalContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  .modal input {
+    background-color: black;
+    color: white;
+    height: 33px;
+    padding: 5px;
+    border-radius: 5px;
+  }
+
+  .modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modalFooter button {
+    width: 150px;
+  }
+
+  @media screen and (max-width: 600px) {
+    .settings {
+      flex-direction: column;
+
+    }
+    .header{
+        padding: 0;
+        padding-left: 5px;
+        padding-right: 5px;
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+  }
+  

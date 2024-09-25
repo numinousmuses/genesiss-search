@@ -40,3 +40,8 @@ a {
     color-scheme: dark;
   }
 }
+
+input:focus {
+  outline: none; /* Removes the default focus outline */
+  box-shadow: none; /* Removes any box-shadow */
+}
