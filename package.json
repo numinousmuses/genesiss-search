@@ -3,22 +3,39 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.654.0",
+    "@babel/core": "^7.25.2",
+    "@react-three/drei": "^9.113.0",
+    "@react-three/postprocessing": "^2.16.2",
+    "babel-plugin-glsl": "^1.0.0",
+    "babel-plugin-macros": "^3.1.0",
+    "bcryptjs": "^2.4.3",
+    "glsl-curl-noise2": "^0.0.4",
+    "glsl-noise": "^0.0.0",
+    "leva": "^0.9.35",
+    "next": "14.2.13",
+    "postprocessing": "^6.36.2",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.13"
+    "sst": "3.1.32",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@babel/preset-typescript": "^7.24.7",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.13"
+    "eslint-config-next": "14.2.13",
+    "fs": "^0.0.1-security",
+    "typescript": "^5"
   }
 }
