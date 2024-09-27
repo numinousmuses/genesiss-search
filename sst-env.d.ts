@@ -5,6 +5,10 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
+    "ChatsTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
     "FinalUsersTable": {
       "name": string
       "type": "sst.aws.Dynamo"
@@ -26,6 +30,10 @@ declare module "sst" {
       "type": "sst.aws.Bucket"
     }
     "GenesissSearchSessionsTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
+    "TeamsTable": {
       "name": string
       "type": "sst.aws.Dynamo"
     }

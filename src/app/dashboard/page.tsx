@@ -15,8 +15,14 @@ interface Chat {
     chatTitle: string,
     groupID?: string,
     groupTitle?: string,
-    teamID?: string
-    teamTitle?: string
+    teamID?: string,
+    teamTitle?: string,
+    messages?: Message[],
+}
+
+interface Message {
+  author: string,
+  message: string
 }
 
 // retrieved chats are Chat[], and then a chats are separated first based on team, then within team, separated by group

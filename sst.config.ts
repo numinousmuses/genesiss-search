@@ -35,6 +35,24 @@ export default $config({
       primaryIndex: { hashKey: "userID" }
     });
 
+    const chatstable = new sst.aws.Dynamo("ChatsTable", {
+      fields: {
+        chatID: "string",
+        userID: "string",
+      },
+      primaryIndex: { hashKey: "chatID" },
+      globalIndexes: {
+        CreatedAtIndex: { hashKey: "userID" }
+      }
+    });
+
+    const teamstable = new sst.aws.Dynamo("TeamsTable", {
+      fields: {
+        teamID: "string",
+      },
+      primaryIndex: { hashKey: "teamID" }
+    });
+
 
     new sst.aws.Nextjs("GenesissSearch", {
       link: [
@@ -42,7 +60,9 @@ export default $config({
         publicbucket,
         genesisssearchapikey,
         SessionsTable,
-        finaluserstable
+        finaluserstable,
+        chatstable,
+        teamstable
       ]
     });
   },
