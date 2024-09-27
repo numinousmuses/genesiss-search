@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
 
   try {
     console.log('the code got to this point');
+
+    const usersk = uuidv4().replace(/-/g, '');
     // Use PutItemCommand for directly interacting with DynamoDB
     await client.send(new PutItemCommand({
       TableName: Resource.FinalUsersTable.name,
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
         userID: { S: userId },
         email: { S: email },
         username: { S: username },
+        sk: { S: usersk },
         passwordHash: { S: passwordHash },
         isVerified: { BOOL: false },
         verificationToken: { S: verificationToken },

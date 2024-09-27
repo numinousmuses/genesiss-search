@@ -29,7 +29,6 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
   const token = searchParams.get("token");
-  const email = searchParams.get("email");
 
   if (!userId || !token) {
     return NextResponse.json(
@@ -46,7 +45,6 @@ export async function GET(req: NextRequest) {
         TableName: Resource.FinalUsersTable.name,
         Key: {
           userID: { S: userId },
-          email: { S: email! },
         },
       }));
 
@@ -64,7 +62,6 @@ export async function GET(req: NextRequest) {
         TableName: Resource.FinalUsersTable.name,
         Key: {
             userID: { S: userId },
-            email: { S: email! },
         },
         UpdateExpression:
           "SET isVerified = :true REMOVE verificationToken, pendingEmail",
@@ -81,7 +78,6 @@ export async function GET(req: NextRequest) {
           TableName: Resource.FinalUsersTable.name,
           Key: {
             userID: { S: userId },
-            email: { S: email! },
           },
           UpdateExpression: "SET email = :newEmail",
           ExpressionAttributeValues: {

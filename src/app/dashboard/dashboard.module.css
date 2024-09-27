@@ -130,6 +130,101 @@
     width: 150px;
   }
 
+  .teamList {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .memberList{
+    text-align: center;
+    max-height: 100px;
+    overflow-y: auto;
+    scrollbar-color: #000000 #ffffff;
+    padding: 0;
+  }
+
+  
+  .teamItem {
+    padding: 10px;
+    margin: 5px 0;
+    background: #000000;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s;
+    border-radius: 5px;
+  }
+  
+  .teamItem:hover {
+    background: #303030;
+  }
+  
+  .teamActions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+  
+  .input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 5px;
+  }
+  
+  .actionButton {
+    padding: 8px 12px;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .actionButton:hover {
+    background: #0056b3;
+  }
+  
+
+.teamActions .actionButton{
+  width: 250px;
+}
+
+.actionInput {
+  display: flex;
+  justify-content: center;
+}
+
+.nothing{
+  width: 100%;
+  height: 100%;
+  --s: 194px; /* control the size */
+  --c1: #606060;
+  --c2: #353535;
+
+  --_l: #0000 calc(25% / 3), var(--c1) 0 25%, #0000 0;
+  --_g: conic-gradient(from 120deg at 50% 87.5%, var(--c1) 120deg, #0000 0);
+
+  background: var(--_g), var(--_g) 0 calc(var(--s) / 2),
+    conic-gradient(from 180deg at 75%, var(--c2) 60deg, #0000 0),
+    conic-gradient(from 60deg at 75% 75%, var(--c1) 0 60deg, #0000 0),
+    linear-gradient(150deg, var(--_l)) 0 calc(var(--s) / 2),
+    conic-gradient(
+      at 25% 25%,
+      #0000 50%,
+      var(--c2) 0 240deg,
+      var(--c1) 0 300deg,
+      var(--c2) 0
+    ),
+    linear-gradient(-150deg, var(--_l)) #000000 /* third color here */;
+  background-size: calc(0.866 * var(--s)) var(--s);
+}
   @media screen and (max-width: 600px) {
     .settings {
       flex-direction: column;
@@ -144,3 +239,107 @@
     }
   }
   
+.content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* This allows the items to wrap to a new line */
+}
+
+.teamBox {
+  background-color: rgb(179, 179, 179);
+  color: black;
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 97%;
+  justify-content: center;
+  border-radius: 20px;
+}
+
+.teamBox{
+  width: 100%;
+  height: 100%;
+  --s: 194px; /* control the size */
+  --c1: #606060;
+  --c2: #353535;
+
+  --_l: #0000 calc(25% / 3), var(--c1) 0 25%, #0000 0;
+  --_g: conic-gradient(from 120deg at 50% 87.5%, var(--c1) 120deg, #0000 0);
+
+  background: var(--_g), var(--_g) 0 calc(var(--s) / 2),
+    conic-gradient(from 180deg at 75%, var(--c2) 60deg, #0000 0),
+    conic-gradient(from 60deg at 75% 75%, var(--c1) 0 60deg, #0000 0),
+    linear-gradient(150deg, var(--_l)) 0 calc(var(--s) / 2),
+    conic-gradient(
+      at 25% 25%,
+      #0000 50%,
+      var(--c2) 0 240deg,
+      var(--c1) 0 300deg,
+      var(--c2) 0
+    ),
+    linear-gradient(-150deg, var(--_l)) #000000 /* third color here */;
+  background-size: calc(0.866 * var(--s)) var(--s);
+}
+
+.nothing{
+  width: 100%;
+  height: 100%;
+  --s: 194px; /* control the size */
+  --c1: #606060;
+  --c2: #353535;
+
+  --_l: #0000 calc(25% / 3), var(--c1) 0 25%, #0000 0;
+  --_g: conic-gradient(from 120deg at 50% 87.5%, var(--c1) 120deg, #0000 0);
+
+  background: var(--_g), var(--_g) 0 calc(var(--s) / 2),
+    conic-gradient(from 180deg at 75%, var(--c2) 60deg, #0000 0),
+    conic-gradient(from 60deg at 75% 75%, var(--c1) 0 60deg, #0000 0),
+    linear-gradient(150deg, var(--_l)) 0 calc(var(--s) / 2),
+    conic-gradient(
+      at 25% 25%,
+      #0000 50%,
+      var(--c2) 0 240deg,
+      var(--c1) 0 300deg,
+      var(--c2) 0
+    ),
+    linear-gradient(-150deg, var(--_l)) #000000 /* third color here */;
+  background-size: calc(0.866 * var(--s)) var(--s);
+}
+
+.teamBox h3{
+  text-align: center;
+  background-color: none;
+  transform: rotate(-90deg); /* Rotates the text 90 degrees counterclockwise */
+  transform-origin: left top; /* Adjusts the origin of the rotation */
+  white-space: nowrap; /* Prevents text from wrapping to maintain a single line */
+  translate: 0 70px;
+  
+}
+
+.chatBox {
+  background-color: #303030;
+  /* background-color: #1a1a1a; */
+  color: rgb(255, 255, 255);
+  height: 300px;
+  width: 300px;
+  margin: 20px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+  border-radius: 10px;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chatBox:hover {
+  translate: 0 -10px;
+}
+
+.createTeamSection .actionButton {
+  width: 190px;
+  margin-bottom: 20px;
+}

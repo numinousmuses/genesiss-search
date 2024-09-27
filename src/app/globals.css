@@ -3,6 +3,19 @@
   --foreground: #171717;
 }
 
+@font-face {
+  font-family: 'CreatoLight';
+  src: url('./fonts/CreatoDisplay-Thin.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: Anurati;
+  src: url("./fonts/Anurati-Regular.otf") format("opentype");
+}
+
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,7 +32,7 @@ body {
 body {
   color: var(--foreground);
   background: #000000;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: CreatoLight;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -44,4 +57,8 @@ a {
 input:focus {
   outline: none; /* Removes the default focus outline */
   box-shadow: none; /* Removes any box-shadow */
+}
+
+button {
+  font-family: CreatoLight;
 }

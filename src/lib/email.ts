@@ -59,7 +59,7 @@ export const sendVerificationEmail = async (email: string, userId: string, token
   }
 
   const command = new SendEmailCommand({
-    Source: 'system@genesiss.tech',
+    Source: 'noreply@genesiss.tech',
     Destination: {
       ToAddresses: [email],
     },
@@ -89,10 +89,10 @@ export const sendVerificationEmail = async (email: string, userId: string, token
 
 
 export const sendPasswordResetEmail = async (email: string, userID: string, token: string) => {
-  const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${token}&userId=${userID}&email=${email}`;
+  const resetLink = `https://search.genesiss.tech/api/auth/reset-password?token=${token}&userId=${userID}&email=${email}`;
 
   const input = {
-    Source: 'system@genesiss.tech', // Verified sender email
+    Source: 'noreply@genesiss.tech', // Verified sender email
     Destination: {
       ToAddresses: [email],
     },

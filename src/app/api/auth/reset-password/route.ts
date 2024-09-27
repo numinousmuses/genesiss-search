@@ -2,12 +2,30 @@
 // app/api/auth/reset-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dynamoDB } from '@/lib/dynamo';
-import { hashPassword, hashEmail } from '@/lib/utils';
 import { UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { Resource } from 'sst';
 
+function handleCors(req: NextRequest) {
+  const headers = new Headers();
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Respond to preflight requests with 200 status
+  if (req.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 204, headers });
+  }
+
+  return headers;
+}
+
 export async function POST(req: NextRequest) {
-  const { password, token, userId } = await req.json();
+
+  const headers = handleCors(req);
+
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get("userId");
+  const token = searchParams.get("token");
 
   if (!token || !userId) {
     return NextResponse.json({ message: 'Invalid or missing token/userId' }, { status: 400 });
@@ -29,13 +47,19 @@ export async function POST(req: NextRequest) {
     }
 
     const user = result.Items[0];
-    const newPasswordHash = hashPassword(password);
 
-    // Update the user's password and remove the reset token
+    // Check if newHashedPassword exists
+    if (!user.newHashedPassword || !user.newHashedPassword.S) {
+      return NextResponse.json({ message: 'New password not found' }, { status: 400 });
+    }
+
+    const newPasswordHash = user.newHashedPassword;
+
+    // Update the user's passwordHash with newHashedPassword and remove newHashedPassword and resetToken
     await dynamoDB.send(new UpdateCommand({
       TableName: Resource.FinalUsersTable.name,
-      Key: { userID: user.userID.S, email: user.email.S },
-      UpdateExpression: 'SET passwordHash = :passwordHash REMOVE resetToken',
+      Key: { userID: user.userID.S },
+      UpdateExpression: 'SET passwordHash = :passwordHash REMOVE newHashedPassword, resetToken',
       ExpressionAttributeValues: {
         ':passwordHash': { S: newPasswordHash },
       },
