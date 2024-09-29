@@ -691,6 +691,7 @@ export default function Dashboard() {
                 Change Email
                 </button>
                 </label>
+                Forgot your password?
                 <button onClick={() => router.push("/forgot-password")} className={styles.actionButton}>
                 Reset Password
                 </button>

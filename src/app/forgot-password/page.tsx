@@ -61,7 +61,7 @@ export default function ForgotPassword() {
             className={styles.input}
             required
           />
-          <label htmlFor="password" className={styles.label}>Password</label>
+          <label htmlFor="password" className={styles.label}>New Password</label>
           <input
             type="password"
             name="password"
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
             className={styles.input}
             required
           />
-          <label htmlFor="confirmPassword" className={styles.label}>Confirm Password</label>
+          <label htmlFor="confirmPassword" className={styles.label}>Confirm New Password</label>
           <input
             type="password"
             name="confirmPassword"
