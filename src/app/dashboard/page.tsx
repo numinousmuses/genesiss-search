@@ -450,6 +450,16 @@ export default function Dashboard() {
     }
   }, [isCreateChatModalOpen, session?.userId]);
 
+  interface CreateChatRequest {
+    userId: string; // The ID of the user creating the chat
+    chatTitle: string; // The title of the new chat
+    brainID?: string; // The brain ID associated with the chat (can be selected or created new)
+    teamID?: string; // Optional: The team ID where the chat is created (if applicable)
+    groupID?: string; // Optional: The group ID to add the chat to, or new group title
+    viewPermissions?: { [key: string]: boolean }; // Optional: A mapping of team members who can view the chat
+    editPermissions?: { [key: string]: boolean }; // Optional: A mapping of team members who can edit the chat
+  }
+
   // Function to handle chat creation
   const createChat = async () => {
     if (!newChatTitle.trim()) {
@@ -474,9 +484,9 @@ export default function Dashboard() {
 
         if (response.ok) {
             const { chatID } = await response.json();
-            alert("Chat created successfully");
-            closeCreateChatModal();
+            // alert("Chat created successfully");
             router.push(`/chat/${chatID}`);
+            closeCreateChatModal();
         } else {
             alert("Failed to create chat");
         }
@@ -627,17 +637,24 @@ export default function Dashboard() {
           )}
         </div>
         <div className={styles.settings}>
+        <button onClick={openCreateChatModal} className={styles.createChatButton}>
+            New Chat
+          </button>
           <button className={styles.settingsButton} onClick={openSettingsModal}>
             Settings
           </button>
           <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
-          <button onClick={openCreateChatModal} className={styles.createChatButton}>
-            Create Chat
-          </button>
+          
         </div>
       </div>
       <div className={styles.content}>
       {organizedChats()}
+      {chats.length === 0 && 
+      <div className={styles.noChats}>
+        <p>You have no chats yet, create one now!</p>
+        <button onClick={openCreateChatModal} className={styles.createChatButton}>Create Chat</button>
+      </div>
+      }
       </div>
 
       {/* Settings Modal */}
@@ -943,7 +960,7 @@ export default function Dashboard() {
                           )}
 
                         {selectedTeamID && teams.length > 0 ? (
-                                <>
+                                <div className={styles.permissionsSection}>
                                   <h4>Team Members</h4>
                                   <p>(Leave blank to give all users view and write access)</p>
                                   <table className={styles.permissionsTable}>
@@ -988,7 +1005,7 @@ export default function Dashboard() {
                                         ))}
                                     </tbody>
                                   </table>
-                                </>
+                                </div>
                               ) : (
                                 <p>No team members to assign permissions to.</p>
                               )} 
