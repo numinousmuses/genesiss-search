@@ -57,6 +57,15 @@ export default function Dashboard() {
   const [hasError, setHasError] = useState(false); 
   const [isCreatingTeam, setIsCreatingTeam] = useState(false); // State to toggle create team mode
 
+  const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
+  const [newChatTitle, setNewChatTitle] = useState('');
+  const [brainIDs, setBrainIDs] = useState<string[]>([]); // List of brainIDs
+  const [selectedBrainID, setSelectedBrainID] = useState('');
+  const [newBrainID, setNewBrainID] = useState('');
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
+  const [newGroupTitle, setNewGroupTitle] = useState('');
+  const [viewPermissions, setViewPermissions] = useState<{ [key: string]: boolean }>({});
+  const [editPermissions, setEditPermissions] = useState<{ [key: string]: boolean }>({});
 
 
   const router = useRouter();
@@ -163,7 +172,7 @@ export default function Dashboard() {
         // Fetch chats for the user
         const chatResponse = await fetch(`/api/chats/${session.userId}`);
         if (chatResponse.ok) {
-          const chatData = await chatResponse.json();
+          const chatData: Chat[] = await chatResponse.json();
           setChats(chatData);
 
           // Extract unique team IDs from chats using Set and convert to array
@@ -179,29 +188,35 @@ export default function Dashboard() {
             });
 
             if (teamResponse.ok) {
-              const teamData = await teamResponse.json();
+              const teamData: Team[] = await teamResponse.json();
               setTeams(teamData);
+              setHasError(false);
+
             } else {
-              setHasError(true);
-              setChats(sampleChats);
               setTeams(sampleTeams);
+              setHasError(true);
             }
+          } else {
+            setTeams(sampleTeams);
           }
         } else {
-          setHasError(true);
           setChats(sampleChats);
           setTeams(sampleTeams);
+          setHasError(true);
         }
       } catch (error) {
-        setHasError(true);
+
         setChats(sampleChats);
         setTeams(sampleTeams);
+        setHasError(true);
+
 
         console.error("Error fetching chats or teams:", error);
       }
     };
 
     fetchSession();
+
 
     // Only call fetchChatsAndTeams when session is available and no errors have occurred
     if (session && !hasError) {
@@ -367,46 +382,139 @@ export default function Dashboard() {
 
     // Fetch teams when opening team settings modal
     const fetchTeams = async () => {
-        try {
-        const response = await fetch(`/api/teams/${session?.userId}`);
-        if (response.ok) {
-            const data = await response.json();
-            setTeams(data);
-        } else {
-            console.error('Failed to fetch teams');
-        }
-        } catch (error) {
-        console.error('Error fetching teams:', error);
-        }
-    };
-    
-    // Create a new team if no teams exist
-    const createTeam = async () => {
-        if (!newTeamTitle.trim()) {
-        alert('Please enter a team title.');
-        return;
-        }
-    
-        if (confirm('Are you sure you want to create a new team?')) {
-        try {
-            const response = await fetch('/api/teams', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: session?.userId, teamTitle: newTeamTitle }),
+        // Prevent fetch if there's an error or session is not yet set
+      if (!session?.userId || hasError) return;
+
+      try {
+        // Fetch chats for the user
+        const chatResponse = await fetch(`/api/chats/${session.userId}`);
+        if (chatResponse.ok) {
+          const chatData: Chat[] = await chatResponse.json();
+          setChats(chatData);
+
+          // Extract unique team IDs from chats using Set and convert to array
+          const teamIDsSet = new Set(chatData.map((chat: Chat) => chat.teamID).filter(Boolean));
+          const teamIDs = Array.from(teamIDsSet) as string[]; // Convert Set to array
+
+          // Fetch teams by team IDs
+          if (teamIDs.length > 0) {
+            const teamResponse = await fetch("/api/teams", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: session.userId, teamIDs }),
             });
-            if (response.ok) {
-            alert('Team created successfully');
-            setNewTeamTitle(''); // Clear input after team creation
-            fetchTeams(); // Refresh teams after creation
+
+            if (teamResponse.ok) {
+              const teamData: Team[] = await teamResponse.json();
+              setTeams(teamData);
             } else {
-            console.error('Failed to create team');
-            alert('Failed to create team');
+              setHasError(true);
+              console.error("Error fetching teams:", teamResponse.statusText);
+            }
+          }
+        } else {
+          setHasError(true);
+          console.error("Error fetching chats:", chatResponse.statusText);
+        }
+      } catch (error) {
+        setHasError(true);
+
+        console.error("Error fetching chats or teams:", error);
+      }
+    };
+
+    // Functions to handle opening/closing modals
+  const openCreateChatModal = () => setIsCreateChatModalOpen(true);
+  const closeCreateChatModal = () => setIsCreateChatModalOpen(false);
+
+  // Fetch brainIDs when opening the modal
+  useEffect(() => {
+    const fetchBrainIDs = async () => {
+        if (!session?.userId) return;
+
+        try {
+            const response = await fetch(`/api/brainID/${session.userId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setBrainIDs(data);
+            } else {
+                console.error("Failed to fetch brain IDs");
             }
         } catch (error) {
-            console.error('Error creating team:', error);
-        }
+            console.error("Error fetching brain IDs:", error);
         }
     };
+
+    if (isCreateChatModalOpen) {
+        fetchBrainIDs();
+    }
+  }, [isCreateChatModalOpen, session?.userId]);
+
+  // Function to handle chat creation
+  const createChat = async () => {
+    if (!newChatTitle.trim()) {
+        alert("Please enter a chat title.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/chats/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: session?.userId,
+                chatTitle: newChatTitle,
+                brainID: selectedBrainID === "createNew" ? newBrainID : selectedBrainID,
+                teamID: selectedTeamID,
+                groupID: selectedGroupID === "createNewGroup" ? newGroupTitle : selectedGroupID,
+                viewPermissions,
+                editPermissions,
+            }),
+        });
+
+        if (response.ok) {
+            const { chatID } = await response.json();
+            alert("Chat created successfully");
+            closeCreateChatModal();
+            router.push(`/chat/${chatID}`);
+        } else {
+            alert("Failed to create chat");
+        }
+    } catch (error) {
+        console.error("Error creating chat:", error);
+    }
+  };
+    
+    // Function to handle creating a new team
+    const createTeam = async () => {
+      if (!newTeamTitle.trim()) {
+          alert('Please enter a team title.');
+          return;
+      }
+  
+      if (confirm('Are you sure you want to create a new team?')) {
+          try {
+              const response = await fetch('/api/teams/create', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: session?.userId, teamTitle: newTeamTitle }),
+              });
+  
+              if (response.ok) {
+                  alert('Team created successfully');
+                  setNewTeamTitle(''); // Clear input after team creation
+  
+                  // Call fetchTeams to refresh the teams state
+                  fetchTeams(); // Refresh the teams after the team is created
+              } else {
+                  console.error('Failed to create team');
+                  alert('Failed to create team');
+              }
+          } catch (error) {
+              console.error('Error creating team:', error);
+          }
+      }
+  };
   
   
   // Function to handle adding a team member
@@ -523,6 +631,9 @@ export default function Dashboard() {
             Settings
           </button>
           <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
+          <button onClick={openCreateChatModal} className={styles.createChatButton}>
+            Create Chat
+          </button>
         </div>
       </div>
       <div className={styles.content}>
@@ -727,6 +838,214 @@ export default function Dashboard() {
         </div>
       )}
 
+
+      {isCreateChatModalOpen && (
+          <div className={styles.modalOverlay} onClick={closeCreateChatModal}>
+              <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                  <h2>Create a New Chat</h2>
+                  <div className={`${styles.createChatSection} ${styles.modalContent}` }>
+                      <label>
+                          Chat Title:
+                          <input
+                              type="text"
+                              placeholder="Enter chat title"
+                              value={newChatTitle}
+                              onChange={(e) => setNewChatTitle(e.target.value)}
+                              className={styles.input}
+                          />
+                      </label>
+
+                      <label>
+                          Select Brain:
+                          <select
+                              value={selectedBrainID}
+                              onChange={(e) => setSelectedBrainID(e.target.value)}
+                              className={styles.input}
+                          >
+                              {brainIDs.length > 0 ? (
+                                  brainIDs.map((brainID) => (
+                                      <option key={brainID} value={brainID}>
+                                          {brainID}
+                                      </option>
+                                  ))
+                              ) : (
+                                  <option value="">No Custom Brain (Default)</option>
+                              )}
+                              <option value="createNew">Create New Brain ID</option>
+                          </select>
+                      </label>
+
+                      {selectedBrainID === "createNew" && (
+                          <label>
+                              New Brain ID:
+                              <input
+                                  type="text"
+                                  placeholder="Enter new brain ID"
+                                  value={newBrainID}
+                                  onChange={(e) => setNewBrainID(e.target.value)}
+                                  className={styles.input}
+                              />
+                          </label>
+                      )}
+
+                      {teams.length > 0 && (
+                          <label>
+                          Select Team (Optional): 
+                          <select
+                            value={selectedTeamID || ''}
+                            onChange={(e) => setSelectedTeamID(e.target.value)}
+                            className={styles.input}
+                          >
+                            <option value="">None</option> {/* Add None/Default option */}
+                            {teams.map((team) => (
+                              <option key={team.id} value={team.id}>
+                                {team.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+
+                      {/* Group Creation Section */}
+                      {selectedTeamID && (
+                        <>
+                          <label>
+                            Select Group or Create New Group:
+                            <select
+                              value={selectedGroupID || ''}
+                              onChange={(e) => setSelectedGroupID(e.target.value)}
+                              className={styles.input}
+                            >
+                              {groups.map((group) => (
+                                <option key={group.id} value={group.id}>
+                                  {group.name}
+                                </option>
+                              ))}
+                              <option value="">None</option> 
+                              <option value="createNewGroup">Create New Group</option>
+                            </select>
+                          </label>
+
+                          {selectedGroupID === "createNewGroup" && (
+                            <>
+                              {/* Input for the group name */}
+                              <label>
+                                Group Title:
+                                <input
+                                  type="text"
+                                  placeholder="Enter group title"
+                                  value={newGroupTitle}
+                                  onChange={(e) => setNewGroupTitle(e.target.value)}
+                                  className={styles.input}
+                                />
+                              </label>
+                            </>
+                          )}
+
+                        {selectedTeamID && teams.length > 0 ? (
+                                <>
+                                  <h4>Team Members</h4>
+                                  <p>(Leave blank to give all users view and write access)</p>
+                                  <table className={styles.permissionsTable}>
+                                    <thead>
+                                      <tr>
+                                        <th>Member</th>
+                                        <th className={styles.viewHeader}> View</th>
+                                        <th className={styles.editHeader}> Edit</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {teams
+                                        .find((team) => team.id === selectedTeamID)
+                                        ?.members.map((member) => (
+                                          <tr key={member}>
+                                            <td>{member}</td>
+                                            <td>
+                                              <input
+                                                type="checkbox"
+                                                checked={viewPermissions[member] || false}
+                                                onChange={(e) =>
+                                                  setViewPermissions({
+                                                    ...viewPermissions,
+                                                    [member]: e.target.checked,
+                                                  })
+                                                }
+                                              />
+                                            </td>
+                                            <td>
+                                              <input
+                                                type="checkbox"
+                                                checked={editPermissions[member] || false}
+                                                onChange={(e) =>
+                                                  setEditPermissions({
+                                                    ...editPermissions,
+                                                    [member]: e.target.checked,
+                                                  })
+                                                }
+                                              />
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </>
+                              ) : (
+                                <p>No team members to assign permissions to.</p>
+                              )} 
+                        </>
+                      )}
+
+                      {/* Allow creating a group even when no teams exist */}
+                      {!selectedTeamID && (
+                        <>
+                          <label>
+                            Select Group (Optional):
+                            <select
+                              value={selectedGroupID || ''}
+                              onChange={(e) => setSelectedGroupID(e.target.value)}
+                              className={styles.input}
+                            >
+                              {groups.map((group) => (
+                                <option key={group.id} value={group.id}>
+                                  {group.name}
+                                </option>
+                              ))}
+                              <option value="">None</option> 
+                              <option value="createNewGroup">Create New Group</option>
+                            </select>
+                          </label>
+
+                          {selectedGroupID === "createNewGroup" && (
+                            <>
+                              {/* Input for the group name */}
+                              <label>
+                                Group Title:
+                                <input
+                                  type="text"
+                                  placeholder="Enter group title"
+                                  value={newGroupTitle}
+                                  onChange={(e) => setNewGroupTitle(e.target.value)}
+                                  className={styles.input}
+                                />
+                              </label>
+                            </>
+                          )}
+                        </>
+                      )}
+
+
+                      <button onClick={createChat} className={styles.actionButton}>
+                          Create Chat
+                      </button>
+                  </div>
+                  <div className={styles.modalFooter}>
+                      <button onClick={closeCreateChatModal} className={styles.closeButton}>
+                          Close
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
 
     </div>
   );
