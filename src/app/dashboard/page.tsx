@@ -651,7 +651,7 @@ export default function Dashboard() {
       {organizedChats()}
       {chats.length === 0 && 
       <div className={styles.noChats}>
-        <p>You have no chats yet, create one now!</p>
+        <p>You have no chats yet. Create one now!</p>
         <button onClick={openCreateChatModal} className={styles.createChatButton}>Create Chat</button>
       </div>
       }
@@ -744,6 +744,8 @@ export default function Dashboard() {
                 {/* Display Create Team Form if in create mode */}
                 {isCreatingTeam ? (
                   <div className={styles.createTeamSection}>
+                    <h3>Create a Team:</h3>
+                    <br />
                     <input
                       type="text"
                       placeholder="Enter team title"
