@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate a new teamID
-    const teamID = uuidv4();
+    const teamID = uuidv4().replace(/-/g, '');
 
     // Step 1: Create a new team in the Teams table
     const newTeamCommand = new PutCommand({
