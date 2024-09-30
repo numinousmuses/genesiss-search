@@ -1,0 +1,110 @@
+.page{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+}
+
+.pageHeader{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 40px;
+}
+
+.backButton, .settings{
+    color: rgb(135, 135, 135);
+    transition: all 0.3s ease-in-out;
+}
+
+.backButton:hover, .settings:hover{
+    color: white;
+    cursor: pointer;
+}
+
+.pageFooter{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 40px;
+}
+
+.inputContainer{
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 40px;
+    gap: 10px;
+    background-color: rgb(17, 17, 17);
+}
+
+.inputContainer input{
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    color: white;
+}
+
+.uploadButton{
+    color: rgb(172, 172, 172);
+    transition: all 0.3s ease-in-out;
+}
+
+.uploadButton:hover{
+    color: white;
+    cursor: pointer;
+}
+
+.sendButton{
+    background-color: #b3b3b3;
+    transition: all 0.3s ease-in-out;
+    border: none;
+    color: black;
+    padding: 5px;
+}
+
+.sendButton:hover{
+    background-color: #ffffff;
+    cursor: pointer;
+}
+
+.pageBody{
+    width: 50%;
+    height: 100vh;
+    overflow-y: scroll;
+
+}
+
+@media screen and (max-width: 1200px) {
+    .inputContainer{
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-left: 10px;
+        padding-right: 10px;
+        height: 40px;
+        gap: 10px;
+    }
+    
+
+    .pageFooter{
+
+        padding-left: 0px;
+        padding-right: 0px;
+
+    }
+
+
+  }

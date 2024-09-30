@@ -225,6 +225,7 @@ export default function Dashboard() {
     }
   }, [router, session, hasError]);
 
+  
     const handleLogout = async () => {
         try {
         const response = await fetch("/api/auth/logout", { method: "POST" });
@@ -248,72 +249,60 @@ export default function Dashboard() {
     };
 
         // Organize chats by team, then group, then standalone
-    const organizedChats = () => {
-        const teamChats: { [key: string]: Chat[] } = {};
-        const groupChats: { [key: string]: Chat[] } = {};
-        const standaloneChats: Chat[] = [];
-
-        // Sort chats into categories
-        chats.forEach((chat) => {
-        if (chat.teamID) {
-            if (!teamChats[chat.teamID]) teamChats[chat.teamID] = [];
-            teamChats[chat.teamID].push(chat);
-        } else if (chat.groupID) {
-            if (!groupChats[chat.groupID]) groupChats[chat.groupID] = [];
-            groupChats[chat.groupID].push(chat);
-        } else {
-            standaloneChats.push(chat);
-        }
-        });
-
-        // Sort chats within each team by group and then standalone within the team
-        const sortedChats: JSX.Element[] = [];
-
-        // Add team chats
-        Object.entries(teamChats).forEach(([teamID, teamChats]) => {
-        const team = teams.find((t) => t.id === teamID);
-        if (team) {
-            sortedChats.push(
-            <div key={teamID} className={styles.teamBox}>
-                {/* <h3>{team.name}</h3> */}
-                {teamChats.map((chat) =>
-                chat.groupID ? (
-                    <div key={chat.chatID} className={styles.chatBox} onClick={() => router.push(`/chat/${chat.chatID}`)} >
-                    {chat.chatTitle} (Group: {chat.groupTitle})
+        const organizedChats = () => {
+          const teamChats: { [key: string]: Chat[] } = {};
+          const standaloneChats: Chat[] = [];
+        
+          // Sort chats into categories
+          chats.forEach((chat) => {
+            if (chat.teamID) {
+              if (!teamChats[chat.teamID]) teamChats[chat.teamID] = [];
+              teamChats[chat.teamID].push(chat);
+            } else {
+              standaloneChats.push(chat);
+            }
+          });
+        
+          // Sort chats within each team by group and then standalone within the team
+          const sortedChats: JSX.Element[] = [];
+        
+          // Add team chats
+          Object.entries(teamChats).forEach(([teamID, teamChats]) => {
+            const team = teams.find((t) => t.id === teamID);
+            if (team) {
+              sortedChats.push(
+                <div key={teamID} className={styles.teamBox}>
+                  <h3>{team.name}</h3>
+                  {teamChats.map((chat) => (
+                    <div
+                      key={chat.chatID}
+                      className={styles.chatBox}
+                      onClick={() => router.push(`/chat/${chat.chatID}`)} // Correct the router push action
+                    >
+                      {chat.chatTitle} {chat.groupID && `(Group: ${chat.groupTitle})`}
                     </div>
-                ) : (
-                    <div key={chat.chatID} className={styles.chatBox}>
-                    {chat.chatTitle}
-                    </div>
-                )
-                )}
-            </div>
-            );
-        }
-        });
-
-        // Add standalone group chats
-        Object.values(groupChats).forEach((groupChatArray) => {
-        groupChatArray.forEach((chat) => {
+                  ))}
+                </div>
+              );
+            }
+          });
+        
+          // Add standalone chats
+          standaloneChats.forEach((chat) => {
             sortedChats.push(
-            <div key={chat.chatID} className={styles.chatBox}>
-                {chat.chatTitle} (Group: {chat.groupTitle})
-            </div>
+              <div
+                key={chat.chatID}
+                className={styles.chatBox}
+                onClick={() => router.push(`/chat/${chat.chatID}`)} // Ensure standalone chats have a router push
+              >
+                {chat.chatTitle} {chat.groupID && `- Group: ${chat.groupTitle}`}
+              </div>
             );
-        });
-        });
-
-        // Add standalone chats
-        standaloneChats.forEach((chat) => {
-        sortedChats.push(
-            <div key={chat.chatID} className={styles.chatBox}>
-            {chat.chatTitle}
-            </div>
-        );
-        });
-
-        return sortedChats;
-    };
+          });
+        
+          return sortedChats;
+        };
+        
 
     // Function to handle username change
     const changeUsername = async () => {

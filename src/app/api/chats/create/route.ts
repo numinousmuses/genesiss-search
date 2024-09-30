@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid'; // For generating unique chat IDs
 import { Resource } from 'sst'; // Replace with your SST setup if applicable
 
-// Initialize DynamoDB Client
+// Initialize DynamoDB and S3 Clients
 const dynamoDbClient = new DynamoDBClient({ region: "us-east-1" });
 const documentClient = DynamoDBDocumentClient.from(dynamoDbClient);
+const s3Client = new S3Client({ region: "us-east-1" });
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,12 +37,24 @@ export async function POST(request: NextRequest) {
         brainID: brainID || null,
         chatGroup: groupID || null,
         chatGroupID: groupID || null,
+        chatContent: `s3://${Resource.GenesissSearchBucket.name}/${chatID}` // S3 URL for the chat content
       },
     });
 
     await documentClient.send(newChatCommand);
 
-    // Step 2: Update the user's chats array in the Users table
+    // Step 2: Initialize the chat content in S3 with an empty array of messages
+    const initialChatContent = JSON.stringify([]);
+    const s3Params = {
+      Bucket: Resource.GenesissSearchBucket.name, // Replace with your S3 bucket name
+      Key: chatID, // The chatID will be used as the S3 key
+      Body: initialChatContent,
+      ContentType: "application/json",
+    };
+    const putObjectCommand = new PutObjectCommand(s3Params);
+    await s3Client.send(putObjectCommand);
+
+    // Step 3: Update the user's chats array in the Users table
     const updateUserChatsCommand = new UpdateCommand({
       TableName: Resource.FinalUsersTable.name, // Replace with your actual users table name
       Key: {
@@ -55,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     await documentClient.send(updateUserChatsCommand);
 
-    // Step 3: If part of a team, update the team's chats list
+    // Step 4: If part of a team, update the team's chats list
     if (teamID) {
       const updateTeamChatsCommand = new UpdateCommand({
         TableName: Resource.TeamsTable.name, // Replace with your actual teams table name
