@@ -81,7 +81,7 @@ async function getChatsByUserID(userIDs: string[]): Promise<DatabaseChat[]> {
         try {
             const command = new QueryCommand({
                 TableName: Resource.ChatsTable.name, // Replace with your DynamoDB table name
-                IndexName: userID, // Replace with your GSI name
+                IndexName: "CreatedAtIndex", // Replace with your GSI name
                 KeyConditionExpression: 'userID = :userID',
                 ExpressionAttributeValues: {
                     ':userID': userID,
@@ -212,6 +212,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(chats, { status: 200 });
     } catch (error) {
         console.error("Failed to retrieve chats", error);
+        console.log("\n\n\n\n\n\n\n\n\n")
+        console.log("BIG ERROR")
+        console.log(JSON.stringify(error, null, 2))
+        console.log("\n\n\n\n\n\n\n\n\n")
         return NextResponse.json({ message: "Failed to retrieve chats" }, { status: 500 });
     }
 }

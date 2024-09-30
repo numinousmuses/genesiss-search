@@ -190,14 +190,14 @@ export default function Dashboard() {
             if (teamResponse.ok) {
               const teamData: Team[] = await teamResponse.json();
               setTeams(teamData);
-              setHasError(false);
-
+              setHasError(true)
             } else {
               setTeams(sampleTeams);
               setHasError(true);
             }
           } else {
             setTeams(sampleTeams);
+            setHasError(true);
           }
         } else {
           setChats(sampleChats);
@@ -215,11 +215,12 @@ export default function Dashboard() {
       }
     };
 
-    fetchSession();
+    if(!session){fetchSession();}
 
 
     // Only call fetchChatsAndTeams when session is available and no errors have occurred
     if (session && !hasError) {
+      
       fetchChatsAndTeams();
     }
   }, [router, session, hasError]);
