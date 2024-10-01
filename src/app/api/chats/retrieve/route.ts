@@ -25,33 +25,82 @@ const documentClient = DynamoDBDocumentClient.from(dynamoDbClient);
 // Main POST function to handle the chat retrieval
 export async function POST(request: NextRequest) {
 
-    const sampleChats: ChatResponse = {
-        chatTitle: "General Discussion",
-        messages: [
-          {
-            message: "Hey everyone, welcome to the chat!",
-            author: "genesiss",
-          },
-          {
-            message: "Thank you! Excited to be here.",
-            author: "user",
-          },
-          {
-            message: "Let’s get started with the first topic of discussion.",
-            author: "genesiss",
-          },
-          {
-            message: "Sure, I’ve been thinking about our next project.",
-            author: "user",
-          },
-          {
-            message: "Great! Let's brainstorm some ideas.",
-            author: "genesiss",
-          },
-        ],
-      };
+    // const sampleChats: ChatResponse = {
+    //     chatTitle: "Project Brainstorming",
+    //     messages: [
+    //       {
+    //         message: "I have a new idea for our project. What do you think of using machine learning to predict stock prices?",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "### That sounds interesting!\nLet's dive into the details.\n\nWe could start with the following:\n- Gather historical data\n- Build a model\n- Evaluate the predictions",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "That works. Which algorithm should we use for predictions?",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "We could use **LSTM (Long Short-Term Memory)** networks for time series forecasting. Here's a quick look at the formula for an LSTM cell:\n\n$$f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f)$$",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "Interesting! Could you share a code example?",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "Sure! Here's a simple example using Python and TensorFlow:\n\n```python\nimport tensorflow as tf\nfrom tensorflow.keras.models import Sequential\nfrom tensorflow.keras.layers import LSTM, Dense\n\nmodel = Sequential()\nmodel.add(LSTM(50, return_sequences=True, input_shape=(100, 1)))\nmodel.add(LSTM(50, return_sequences=False))\nmodel.add(Dense(1))\nmodel.compile(optimizer='adam', loss='mse')\nmodel.summary()\n```",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "Awesome! I'll try that out.",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "Great! Let me know if you need any help with the implementation.",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "I have a new idea for our project. What do you think of using machine learning to predict stock prices?",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "### That sounds interesting!\nLet's dive into the details.\n\nWe could start with the following:\n- Gather historical data\n- Build a model\n- Evaluate the predictions",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "That works. Which algorithm should we use for predictions?",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "We could use **LSTM (Long Short-Term Memory)** networks for time series forecasting. Here's a quick look at the formula for an LSTM cell:\n\n$$f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f)$$",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "Interesting! Could you share a code example?",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "Sure! Here's a simple example using Python and TensorFlow:\n\n```python\nimport tensorflow as tf\nfrom tensorflow.keras.models import Sequential\nfrom tensorflow.keras.layers import LSTM, Dense\n\nmodel = Sequential()\nmodel.add(LSTM(50, return_sequences=True, input_shape=(100, 1)))\nmodel.add(LSTM(50, return_sequences=False))\nmodel.add(Dense(1))\nmodel.compile(optimizer='adam', loss='mse')\nmodel.summary()\n```",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "Awesome! I'll try that out.",
+    //         author: "user",
+    //       },
+    //       {
+    //         message: "Great! Let me know if you need any help with the implementation.",
+    //         author: "genesiss",
+    //       },
+    //       {
+    //         message: "Will do, thanks!",
+    //         author: "user",
+    //       }
+    //     ],
+    //   };
+      
 
-      return NextResponse.json(sampleChats, { status: 200 });
+    //   return NextResponse.json(sampleChats, { status: 200 });
 
     try {
         // Parse the request body to get the userID and chatID

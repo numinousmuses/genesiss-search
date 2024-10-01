@@ -86,6 +86,119 @@
 
 }
 
+.systemMessage, .userMessage{
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.systemMessage{
+
+}
+
+.userMessage{
+    background-color: rgb(27, 27, 27);
+}
+
+.ProseMirror {
+    @apply p-12 px-8 sm:px-12;
+    background-color: red;
+  }
+  
+  .ProseMirror .is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+    height: 0;
+  }
+  .ProseMirror .is-empty::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+    height: 0;
+  }
+  
+  /* Custom image styles */
+  
+  .ProseMirror img {
+    transition: filter 0.1s ease-in-out;
+  }
+  
+  .ProseMirror img:hover {
+    cursor: pointer;
+    filter: brightness(90%);
+  }
+  
+  .ProseMirror img.ProseMirror-selectednode {
+    outline: 3px solid #5abbf7;
+    filter: brightness(90%);
+  }
+  
+  .img-placeholder {
+    position: relative;
+  }
+  
+  .img-placeholder::before {
+    content: "";
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid var(--novel-stone-200);
+    border-top-color: var(--novel-stone-800);
+    animation: spinning 0.6s linear infinite;
+  }
+
+  .modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it appears above other content */
+    overflow-y: scroll;
+  }
+  
+  .modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px; /* Adjust width as needed */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    color: black;
+  }
+  
+  .modal button {
+    background-color: black;
+    color: white;
+  }
+
+  .closeButton {
+    padding: 8px 12px;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .modalContent button {
+    width: 150px;
+  }
+
 @media screen and (max-width: 1200px) {
     .inputContainer{
         width: 100%;
@@ -96,6 +209,11 @@
         padding-right: 10px;
         height: 40px;
         gap: 10px;
+    }
+
+    .pageBody{
+        width: 100%;
+        padding: 20px;
     }
     
 
@@ -108,3 +226,26 @@
 
 
   }
+
+  .fileInputContainer {
+    display: inline-block;
+    position: relative;
+  }
+  
+  .customFileUpload {
+    display: inline-block;
+    color: rgb(208, 208, 208); /* Custom text color */
+    cursor: pointer;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    transition: color 0.3s ease-in-out;
+  }
+
+  .customFileUpload:hover {
+    color: white;
+  }
+  
+  .inputContainer input[type="file"] {
+    display: none; /* Hide the default file input */
+  }
+  
