@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
     const chatObject = await getChatFromS3(chatID);
 
     if (!chatObject) {
-      return NextResponse.json({ message: "Chat not found" }, { status: 404 });
+      await uploadChatToS3(chatID, { messages: [userMessage] });
+      // Step 4: Return a success response
+      return NextResponse.json({ message: "Message sent successfully" }, { status: 200 });
     }
 
     // Step 2: Append the new message to the existing chat object

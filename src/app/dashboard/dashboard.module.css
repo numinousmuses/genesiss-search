@@ -322,10 +322,12 @@
 }
 
 .chatBox {
-  background-color: #303030;
+  /* background-color: #303030; */
   /* background-color: #1a1a1a; */
+  background-color: #282828;
+
   color: rgb(255, 255, 255);
-  height: 300px;
+  height: 100px;
   width: 300px;
   margin: 20px;
   box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
@@ -333,6 +335,7 @@
   transition: all 0.3s ease-in-out;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
@@ -382,4 +385,8 @@
   justify-content: center;
   align-items: center;
   gap: 20px;
+}
+
+.teamSubtitle{
+  font-size: 10px;;
 }

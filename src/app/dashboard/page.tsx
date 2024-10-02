@@ -11,13 +11,13 @@ interface Team {
 }
 
 interface Chat {
-    chatID: string,
-    chatTitle: string,
-    groupID?: string,
-    groupTitle?: string,
-    teamID?: string,
-    teamTitle?: string,
-    messages?: Message[],
+  chatID: string,
+  chatTitle: string,
+  groupID?: string,
+  groupTitle?: string,
+  teamID?: string,
+  teamTitle?: string,
+  messages?: Message[],
 }
 
 interface Message {
@@ -25,9 +25,7 @@ interface Message {
   message: string
 }
 
-// retrieved chats are Chat[], and then a chats are separated first based on team, then within team, separated by group
-
-// on load, retrieve chats, then extract teamIDs, and retrieve teams
+// retrieved chats are Chat[], and then chats are separated based on team
 
 
 export default function Dashboard() {
@@ -41,12 +39,10 @@ export default function Dashboard() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeamID, setSelectedTeamID] = useState<string | null>(null);
-  const [selectedGroupID, setSelectedGroupID] = useState<string | null>(null);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [newUsername, setNewUsername] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [selectedTeam, setSelectedTeam] = useState({} as Team);
   const [newMemberEmail, setNewMemberEmail] = useState('');
@@ -62,8 +58,6 @@ export default function Dashboard() {
   const [brainIDs, setBrainIDs] = useState<string[]>([]); // List of brainIDs
   const [selectedBrainID, setSelectedBrainID] = useState('');
   const [newBrainID, setNewBrainID] = useState('');
-  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
-  const [newGroupTitle, setNewGroupTitle] = useState('');
   const [viewPermissions, setViewPermissions] = useState<{ [key: string]: boolean }>({});
   const [editPermissions, setEditPermissions] = useState<{ [key: string]: boolean }>({});
 
@@ -86,83 +80,6 @@ export default function Dashboard() {
       }
     };
 
-    const sampleChats = [
-      {
-        chatID: "chat1",
-        chatTitle: "Team A - General",
-        teamID: "team1",
-        teamTitle: "Team A",
-        groupID: "group1",
-        groupTitle: "Group 1",
-      },
-      {
-        chatID: "chat2",
-        chatTitle: "Team A - Development",
-        teamID: "team1",
-        teamTitle: "Team A",
-        groupID: "group2",
-        groupTitle: "Group 2",
-      },
-      {
-        chatID: "chat3",
-        chatTitle: "Team A - Random",
-        teamID: "team1",
-        teamTitle: "Team A",
-      },
-      {
-        chatID: "chat4.5",
-        chatTitle: "Team A - Random2",
-        teamID: "team1",
-        teamTitle: "Team A",
-      },
-      {
-        chatID: "chat9",
-        chatTitle: "Team A - Random3",
-        teamID: "team1",
-        teamTitle: "Team A",
-      },
-      {
-        chatID: "chat4",
-        chatTitle: "Team B - General",
-        teamID: "team2",
-        teamTitle: "Team B",
-        groupID: "group3",
-        groupTitle: "Group 3",
-      },
-      {
-        chatID: "chat11",
-        chatTitle: "Team B - General",
-        groupID: "group7",
-        groupTitle: "Group 7",
-      },
-      {
-        chatID: "chat5",
-        chatTitle: "Team B - Marketing",
-        teamID: "team2",
-        teamTitle: "Team B",
-      },
-      {
-        chatID: "chat6",
-        chatTitle: "Standalone Chat 1",
-      },
-      {
-        chatID: "chat7",
-        chatTitle: "Standalone Chat 2",
-      },
-    ];
-
-    const sampleTeams = [
-      {
-        id: "team1",
-        name: "Team A",
-        members: ["member1@example.com", "member2@example.com", "member3@example.com", "member4@example.com", "member5@example.com", "member6@example.com", "member7@example.com", "member8@example.com", "member9@example.com", "member10@example.com"],
-      },
-      {
-        id: "team2",
-        name: "Team B",
-        members: ["member4@example.com", "member5@example.com"],
-      },
-    ];
 
     const fetchChatsAndTeams = async () => {
       // Prevent fetch if there's an error or session is not yet set
@@ -175,39 +92,33 @@ export default function Dashboard() {
           const chatData: Chat[] = await chatResponse.json();
           setChats(chatData);
 
+          fetchTeams();
           // Extract unique team IDs from chats using Set and convert to array
-          const teamIDsSet = new Set(chatData.map((chat: Chat) => chat.teamID).filter(Boolean));
-          const teamIDs = Array.from(teamIDsSet) as string[]; // Convert Set to array
+          // const teamIDsSet = new Set(chatData.map((chat: Chat) => chat.teamID).filter(Boolean));
+          // const teamIDs = Array.from(teamIDsSet) as string[]; // Convert Set to array
 
           // Fetch teams by team IDs
-          if (teamIDs.length > 0) {
-            const teamResponse = await fetch("/api/teams", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: session.userId, teamIDs }),
-            });
+          // if (teamIDs.length > 0) {
+          //   const teamResponse = await fetch("/api/teams", {
+          //     method: "POST",
+          //     headers: { "Content-Type": "application/json" },
+          //     body: JSON.stringify({ userId: session.userId, teamIDs }),
+          //   });
 
-            if (teamResponse.ok) {
-              const teamData: Team[] = await teamResponse.json();
-              setTeams(teamData);
-              setHasError(true)
-            } else {
-              setTeams(sampleTeams);
-              setHasError(true);
-            }
-          } else {
-            setTeams(sampleTeams);
-            setHasError(true);
-          }
+          //   if (teamResponse.ok) {
+          //     const teamData: Team[] = await teamResponse.json();
+          //     setTeams(teamData);
+          //     setHasError(true)
+          //   } else {
+          //       setHasError(true);
+          //   }
+          // } 
         } else {
-          setChats(sampleChats);
-          setTeams(sampleTeams);
+      
           setHasError(true);
         }
       } catch (error) {
 
-        setChats(sampleChats);
-        setTeams(sampleTeams);
         setHasError(true);
 
 
@@ -241,14 +152,9 @@ export default function Dashboard() {
 
     const handleTeamClick = (teamID: string) => {
         setSelectedTeamID(teamID === selectedTeamID ? null : teamID);
-        setSelectedGroupID(null); // Reset group selection when a team is selected
-    };
-    
-    const handleGroupClick = (groupID: string) => {
-        setSelectedGroupID(groupID === selectedGroupID ? null : groupID);
     };
 
-        // Organize chats by team, then group, then standalone
+        // Organize chats by team, then standalone
         const organizedChats = () => {
           const teamChats: { [key: string]: Chat[] } = {};
           const standaloneChats: Chat[] = [];
@@ -263,7 +169,7 @@ export default function Dashboard() {
             }
           });
         
-          // Sort chats within each team by group and then standalone within the team
+          // Sort chats within each team
           const sortedChats: JSX.Element[] = [];
         
           // Add team chats
@@ -272,15 +178,17 @@ export default function Dashboard() {
             if (team) {
               sortedChats.push(
                 <div key={teamID} className={styles.teamBox}>
-                  <h3>{team.name}</h3>
-                  {teamChats.map((chat) => (
+                  {teamChats.map((chat) => (<>
                     <div
                       key={chat.chatID}
                       className={styles.chatBox}
                       onClick={() => router.push(`/chat/${chat.chatID}`)} // Correct the router push action
                     >
-                      {chat.chatTitle} {chat.groupID && `(Group: ${chat.groupTitle})`}
+                      {chat.chatTitle}
+                      <div className={styles.teamSubtitle}>{chat.teamTitle}</div>
                     </div>
+                    
+                    </>
                   ))}
                 </div>
               );
@@ -295,7 +203,7 @@ export default function Dashboard() {
                 className={styles.chatBox}
                 onClick={() => router.push(`/chat/${chat.chatID}`)} // Ensure standalone chats have a router push
               >
-                {chat.chatTitle} {chat.groupID && `- Group: ${chat.groupTitle}`}
+                {chat.chatTitle}
               </div>
             );
           });
@@ -371,22 +279,18 @@ export default function Dashboard() {
     };
 
     // Fetch teams when opening team settings modal
+    // Fetch teams when opening team settings modal
     const fetchTeams = async () => {
-        // Prevent fetch if there's an error or session is not yet set
+      // Prevent fetch if there's an error or session is not yet set
       if (!session?.userId || hasError) return;
 
       try {
-        // Fetch chats for the user
-        const chatResponse = await fetch(`/api/chats/${session.userId}`);
-        if (chatResponse.ok) {
-          const chatData: Chat[] = await chatResponse.json();
-          setChats(chatData);
+        // Fetch team IDs for the user
+        const teamIDsResponse = await fetch(`/api/teams/${session.userId}`);
+        if (teamIDsResponse.ok) {
+          const teamIDs = await teamIDsResponse.json();
 
-          // Extract unique team IDs from chats using Set and convert to array
-          const teamIDsSet = new Set(chatData.map((chat: Chat) => chat.teamID).filter(Boolean));
-          const teamIDs = Array.from(teamIDsSet) as string[]; // Convert Set to array
-
-          // Fetch teams by team IDs
+          // Fetch teams by team IDs if they exist
           if (teamIDs.length > 0) {
             const teamResponse = await fetch("/api/teams", {
               method: "POST",
@@ -397,6 +301,8 @@ export default function Dashboard() {
             if (teamResponse.ok) {
               const teamData: Team[] = await teamResponse.json();
               setTeams(teamData);
+              console.log("TEAMDATA")
+              console.log(teamData)
             } else {
               setHasError(true);
               console.error("Error fetching teams:", teamResponse.statusText);
@@ -404,12 +310,11 @@ export default function Dashboard() {
           }
         } else {
           setHasError(true);
-          console.error("Error fetching chats:", chatResponse.statusText);
+          console.error("Error fetching team IDs:", teamIDsResponse.statusText);
         }
       } catch (error) {
         setHasError(true);
-
-        console.error("Error fetching chats or teams:", error);
+        console.error("Error fetching team IDs or teams:", error);
       }
     };
 
@@ -445,7 +350,6 @@ export default function Dashboard() {
     chatTitle: string; // The title of the new chat
     brainID?: string; // The brain ID associated with the chat (can be selected or created new)
     teamID?: string; // Optional: The team ID where the chat is created (if applicable)
-    groupID?: string; // Optional: The group ID to add the chat to, or new group title
     viewPermissions?: { [key: string]: boolean }; // Optional: A mapping of team members who can view the chat
     editPermissions?: { [key: string]: boolean }; // Optional: A mapping of team members who can edit the chat
   }
@@ -466,7 +370,6 @@ export default function Dashboard() {
                 chatTitle: newChatTitle,
                 brainID: selectedBrainID === "createNew" ? newBrainID : selectedBrainID,
                 teamID: selectedTeamID,
-                groupID: selectedGroupID === "createNewGroup" ? newGroupTitle : selectedGroupID,
                 viewPermissions,
                 editPermissions,
             }),
@@ -474,7 +377,6 @@ export default function Dashboard() {
 
         if (response.ok) {
             const { chatID } = await response.json();
-            // alert("Chat created successfully");
             router.push(`/chat/${chatID}`);
             closeCreateChatModal();
         } else {
@@ -497,7 +399,7 @@ export default function Dashboard() {
               const response = await fetch('/api/teams/create', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId: session?.userId, teamTitle: newTeamTitle }),
+                  body: JSON.stringify({ userId: session?.userId, teamTitle: newTeamTitle, email: session?.email }),
               });
   
               if (response.ok) {
@@ -916,43 +818,7 @@ export default function Dashboard() {
                         </label>
                       )}
 
-                      {/* Group Creation Section */}
-                      {selectedTeamID && (
-                        <>
-                          <label>
-                            Select Group or Create New Group:
-                            <select
-                              value={selectedGroupID || ''}
-                              onChange={(e) => setSelectedGroupID(e.target.value)}
-                              className={styles.input}
-                            >
-                              {groups.map((group) => (
-                                <option key={group.id} value={group.id}>
-                                  {group.name}
-                                </option>
-                              ))}
-                              <option value="">None</option> 
-                              <option value="createNewGroup">Create New Group</option>
-                            </select>
-                          </label>
-
-                          {selectedGroupID === "createNewGroup" && (
-                            <>
-                              {/* Input for the group name */}
-                              <label>
-                                Group Title:
-                                <input
-                                  type="text"
-                                  placeholder="Enter group title"
-                                  value={newGroupTitle}
-                                  onChange={(e) => setNewGroupTitle(e.target.value)}
-                                  className={styles.input}
-                                />
-                              </label>
-                            </>
-                          )}
-
-                        {selectedTeamID && teams.length > 0 ? (
+                      {selectedTeamID && teams.length > 0 ? (
                                 <div className={styles.permissionsSection}>
                                   <h4>Team Members</h4>
                                   <p>(Leave blank to give all users view and write access)</p>
@@ -1002,47 +868,6 @@ export default function Dashboard() {
                               ) : (
                                 <p>No team members to assign permissions to.</p>
                               )} 
-                        </>
-                      )}
-
-                      {/* Allow creating a group even when no teams exist */}
-                      {!selectedTeamID && (
-                        <>
-                          <label>
-                            Select Group (Optional):
-                            <select
-                              value={selectedGroupID || ''}
-                              onChange={(e) => setSelectedGroupID(e.target.value)}
-                              className={styles.input}
-                            >
-                              {groups.map((group) => (
-                                <option key={group.id} value={group.id}>
-                                  {group.name}
-                                </option>
-                              ))}
-                              <option value="">None</option> 
-                              <option value="createNewGroup">Create New Group</option>
-                            </select>
-                          </label>
-
-                          {selectedGroupID === "createNewGroup" && (
-                            <>
-                              {/* Input for the group name */}
-                              <label>
-                                Group Title:
-                                <input
-                                  type="text"
-                                  placeholder="Enter group title"
-                                  value={newGroupTitle}
-                                  onChange={(e) => setNewGroupTitle(e.target.value)}
-                                  className={styles.input}
-                                />
-                              </label>
-                            </>
-                          )}
-                        </>
-                      )}
-
 
                       <button onClick={createChat} className={styles.actionButton}>
                           Create Chat

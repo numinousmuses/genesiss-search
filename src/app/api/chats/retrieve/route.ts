@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
@@ -8,6 +9,11 @@ import { Resource } from "sst";
 // Define the ChatResponse interface
 interface ChatResponse {
     chatTitle: string;
+    teamID?: string;
+    viewers?: string[]; // viewers and editors can view the chat, only editors can edit
+    editors?: string[];
+    admin?: boolean; // true if the user is an admin, so they can edit the Viewers/Editors of the chat
+    brainID?: string; // Optional brainID associated with the chat
     messages: Message[];
 }
 
@@ -24,84 +30,6 @@ const documentClient = DynamoDBDocumentClient.from(dynamoDbClient);
 
 // Main POST function to handle the chat retrieval
 export async function POST(request: NextRequest) {
-
-    // const sampleChats: ChatResponse = {
-    //     chatTitle: "Project Brainstorming",
-    //     messages: [
-    //       {
-    //         message: "I have a new idea for our project. What do you think of using machine learning to predict stock prices?",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "### That sounds interesting!\nLet's dive into the details.\n\nWe could start with the following:\n- Gather historical data\n- Build a model\n- Evaluate the predictions",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "That works. Which algorithm should we use for predictions?",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "We could use **LSTM (Long Short-Term Memory)** networks for time series forecasting. Here's a quick look at the formula for an LSTM cell:\n\n$$f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f)$$",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "Interesting! Could you share a code example?",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "Sure! Here's a simple example using Python and TensorFlow:\n\n```python\nimport tensorflow as tf\nfrom tensorflow.keras.models import Sequential\nfrom tensorflow.keras.layers import LSTM, Dense\n\nmodel = Sequential()\nmodel.add(LSTM(50, return_sequences=True, input_shape=(100, 1)))\nmodel.add(LSTM(50, return_sequences=False))\nmodel.add(Dense(1))\nmodel.compile(optimizer='adam', loss='mse')\nmodel.summary()\n```",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "Awesome! I'll try that out.",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "Great! Let me know if you need any help with the implementation.",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "I have a new idea for our project. What do you think of using machine learning to predict stock prices?",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "### That sounds interesting!\nLet's dive into the details.\n\nWe could start with the following:\n- Gather historical data\n- Build a model\n- Evaluate the predictions",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "That works. Which algorithm should we use for predictions?",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "We could use **LSTM (Long Short-Term Memory)** networks for time series forecasting. Here's a quick look at the formula for an LSTM cell:\n\n$$f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f)$$",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "Interesting! Could you share a code example?",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "Sure! Here's a simple example using Python and TensorFlow:\n\n```python\nimport tensorflow as tf\nfrom tensorflow.keras.models import Sequential\nfrom tensorflow.keras.layers import LSTM, Dense\n\nmodel = Sequential()\nmodel.add(LSTM(50, return_sequences=True, input_shape=(100, 1)))\nmodel.add(LSTM(50, return_sequences=False))\nmodel.add(Dense(1))\nmodel.compile(optimizer='adam', loss='mse')\nmodel.summary()\n```",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "Awesome! I'll try that out.",
-    //         author: "user",
-    //       },
-    //       {
-    //         message: "Great! Let me know if you need any help with the implementation.",
-    //         author: "genesiss",
-    //       },
-    //       {
-    //         message: "Will do, thanks!",
-    //         author: "user",
-    //       }
-    //     ],
-    //   };
-      
-
-    //   return NextResponse.json(sampleChats, { status: 200 });
-
     try {
         // Parse the request body to get the userID and chatID
         const { userID, chatID } = await request.json();
@@ -110,6 +38,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: "Invalid or missing parameters" }, { status: 400 });
         }
 
+        console.log("USERID")
+        console.log(userID)
+        console.log("CHATID")
+        console.log(chatID)
         // Step 1: Fetch chat information from DynamoDB using chatID
         const chatData = await getChatFromDynamoDB(chatID);
 
@@ -117,8 +49,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: "Chat not found" }, { status: 404 });
         }
 
-        // Step 2: Check if the user has permission to view the chat (editors or viewers)
-        const hasAccess = chatData.viewers.includes(userID) || chatData.editors.includes(userID) || (chatData.editors.length === 0 && chatData.userID === userID);
+        // Step 2: Check if the user has permission to view the chat
+        const hasAccess = await checkChatAccess(userID, chatData);
+
         if (!hasAccess) {
             return NextResponse.json({ message: "Access denied" }, { status: 403 });
         }
@@ -126,10 +59,18 @@ export async function POST(request: NextRequest) {
         // Step 3: Retrieve chat messages from S3 using the chatID as the key
         const messages = await getMessagesFromS3(chatID);
 
-        // Step 4: Return the ChatResponse
+        // Step 4: Determine if the user is an admin (has editing permissions or is a team admin)
+        const isAdmin = await checkIfAdmin(userID, chatData);
+
+        // Step 5: Return the ChatResponse, including brainID and teamID if they exist
         const response: ChatResponse = {
             chatTitle: chatData.chatTitle,
             messages,
+            teamID: chatData.userID !== userID ? chatData.userID : undefined, // Return teamID only if it's not equal to the current user's ID
+            viewers: chatData.viewers || [],
+            editors: chatData.editors || [],
+            admin: isAdmin, // Set admin flag based on permissions
+            brainID: chatData.brainID || undefined, // Include brainID if it exists
         };
 
         return NextResponse.json(response, { status: 200 });
@@ -171,6 +112,7 @@ async function getMessagesFromS3(chatID: string): Promise<Message[]> {
             throw new Error("Unexpected data type for S3 object body");
         }
     } catch (error) {
+
         console.error("Error retrieving messages from S3:", error);
         return [];
     }
@@ -184,3 +126,73 @@ export const streamToString = (stream: stream.Readable): Promise<string> =>
         stream.on("error", reject);
         stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
     });
+
+// Function to check if the user has access to the chat
+async function checkChatAccess(userID: string, chatData: any): Promise<boolean> {
+    // Check if the user is listed as a viewer or editor
+    if (chatData.viewers.includes(userID) || chatData.editors.includes(userID)) {
+        return true;
+    }
+
+    // If there are no specific viewers or editors, check if the entire team has access
+    if (chatData.editors.length === 0 ) {
+        return true;
+    }
+
+    // If the chat belongs to a team, check if the user is part of that team
+    if (chatData.teamID) {
+        const teamData = await getTeamFromDynamoDB(chatData.teamID);
+        if (!teamData) {
+            return false; // Team not found, deny access
+        }
+
+        // Check if the user is an admin or member of the team
+        if (teamData.admins.includes(userID) || teamData.members.includes(userID)) {
+            return true;
+        }
+    }
+
+    if (chatData.userID === userID) {
+        return true;
+    }
+
+    return false; // If none of the conditions are met, deny access
+}
+
+// Function to check if the user is an admin for the chat
+async function checkIfAdmin(userID: string, chatData: any): Promise<boolean> {
+    // Check if the user is in the editors list
+    if (chatData.editors.includes(userID)) {
+        return true;
+    }
+
+    // If the chat belongs to a team, check if the user is an admin of that team
+    if (chatData.teamID) {
+        const teamData = await getTeamFromDynamoDB(chatData.teamID);
+        if (teamData && teamData.admins.includes(userID)) {
+            return true;
+        }
+    }
+
+    if (chatData.userID === userID) {
+        return true;
+    }
+
+    return false; // User is not an admin
+}
+
+// Function to retrieve team data from DynamoDB using teamID
+async function getTeamFromDynamoDB(teamID: string) {
+    try {
+        const command = new GetCommand({
+            TableName: Resource.TeamsTable.name, // Replace with your DynamoDB table name
+            Key: { teamID },
+        });
+
+        const { Item } = await documentClient.send(command);
+        return Item; // Returns the team object from DynamoDB
+    } catch (error) {
+        console.error("Error retrieving team from DynamoDB:", error);
+        return null;
+    }
+}

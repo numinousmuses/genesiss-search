@@ -11,7 +11,7 @@ const documentClient = DynamoDBDocumentClient.from(dynamoDbClient);
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body to get userId and teamTitle
-    const { userId, teamTitle } = await request.json();
+    const { userId, teamTitle, email } = await request.json();
 
     // Validate inputs
     if (!userId || !teamTitle.trim()) {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       Item: {
         teamID: teamID,
         teamName: teamTitle,
-        admins: [userId], // The creator of the team becomes the admin
+        admins: [email, userId], // The creator of the team becomes the admin
         members: [], // Initially, no other members
       },
     });

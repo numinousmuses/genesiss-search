@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         brainID: brainID || null,
         chatGroup: groupID || null,
         chatGroupID: groupID || null,
-        chatContent: `s3://${Resource.GenesissSearchBucket.name}/${chatID}` // S3 URL for the chat content
+        // chatContent: `s3://${Resource.GenesissSearchBucket.name}/${chatID}` // S3 URL for the chat content
       },
     });
 
@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
     };
     const putObjectCommand = new PutObjectCommand(s3Params);
     await s3Client.send(putObjectCommand);
+
+    console.log("Chat created successfully:", chatID);
 
     // Step 3: Update the user's chats array in the Users table
     const updateUserChatsCommand = new UpdateCommand({

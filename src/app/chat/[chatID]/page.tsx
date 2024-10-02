@@ -18,29 +18,113 @@ interface Message {
 
 interface ChatResponse {
   chatTitle: string;
+  teamID?: string;
+  viewers?: string[]; // viewers and editors can view the chat, only editors can edit
+  editors?: string[];
+  admin?: boolean; // true if the user is an admin, so they can edit the Viewers/Editors of the chat
+  brainID?: string;
   messages: Message[];
 }
 
+interface Chat {
+  chatID: string,
+  chatTitle: string,
+  groupID?: string,
+  groupTitle?: string,
+  teamID?: string,
+  teamTitle?: string,
+  messages?: Message[],
+}
+
+interface Team {
+  id: string;
+  name: string;
+  members: string[];
+}
+
 export default function Chat() {
+  const [session, setSession] = useState<{
+    userId: string;
+    email: string;
+    username: string;
+    docks?: any;
+  } | null>(null);
   const [chat, setChat] = useState<ChatResponse | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [author, setAuthor] = useState("user"); // Default author is "user"
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // For settings modal
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // For file uploads
+  const [newChatTitle, setNewChatTitle] = useState(""); // For renaming chat
+  const [viewPermissions, setViewPermissions] = useState<{ [key: string]: boolean }>({});
+  const [editPermissions, setEditPermissions] = useState<{ [key: string]: boolean }>({});
+  const [team, setTeam] = useState<Team | null>(null); // To handle sharing settings
 
   const router = useRouter();
   const params = useParams();
   const chatID = params?.chatID;
 
-  // Function to retrieve chat messages from the API
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        if (response.ok) {
+          const data = await response.json();
+          setSession(data); // Set session here
+        } else {
+          router.push("/login");
+        }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        router.push("/login");
+      }
+    };
+
+    if (!session) {
+      fetchSession(); // Fetch the session
+    }
+  }, [session, router]);
+
+
+  // This effect runs after `session` is updated
+  useEffect(() => {
+    const fetchChatsAndTeams = async () => {
+      if (!session?.userId) return;
+
+      try {
+        const chatResponse = await fetch(`/api/chats/${session.userId}`);
+        if (chatResponse.ok) {
+          const chatData: Chat[] = await chatResponse.json();
+
+          // if chatID not in chats, redirect to dashboard
+          if (!chatData.some((chat: Chat) => chat.chatID === chatID)) {
+            router.push("/dashboard");
+          }
+        }
+      } catch (error) {
+        router.push("/dashboard");
+        console.error("Error fetching chats or teams:", error);
+      }
+    };
+
+    if (session) {
+      fetchChatsAndTeams(); // Fetch chats and teams after session is set
+    }
+  }, [session, chatID, router]);
+
+
   const fetchChatMessages = async () => {
-    if (!chatID) return;
+    if (!session?.userId) return;
 
     try {
+
+      console.log("fetching chat")
+      console.log(session)
+      console.log(session?.userId)
+      console.log(chatID)
       const response = await fetch("/api/chats/retrieve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID: "USER_ID", chatID: chatID }),
+        body: JSON.stringify({ userID: session?.userId, chatID: chatID }),
       });
 
       if (response.ok) {
@@ -54,35 +138,63 @@ export default function Chat() {
     }
   };
 
-  // Fetch chat messages when the component mounts or chatID changes
   useEffect(() => {
-    if (chatID) {
+    if (session?.userId && !chat) {
       fetchChatMessages();
     }
-  }, [chatID]);
+  }, [chatID, session]);
 
-   // Ref to keep track of the bottom of the chat body
-   const bottomRef = useRef<HTMLDivElement | null>(null); 
+  // Ref to keep track of the bottom of the chat body
+  const bottomRef = useRef<HTMLDivElement | null>(null); 
 
-   // Function to scroll to the bottom of the chat
-   const scrollToBottom = () => {
-     if (bottomRef.current) {
-       bottomRef.current.scrollIntoView({ behavior: "smooth" });
-     }
-   };
+  const renameChat = async () => {
+    if (!newChatTitle.trim()) return;
 
-   // Scroll to bottom when messages are updated
-  useEffect(() => {
-    scrollToBottom();
-  }, [chat?.messages]);
+    try {
+      const response = await fetch("/api/chats/rename", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatID: chatID,
+          newChatTitle: newChatTitle,
+        }),
+      });
 
+      if (response.ok) {
+        fetchChatMessages();
+        setNewChatTitle(""); // Clear input after renaming
+        setIsSettingsModalOpen(false); // Close modal after renaming
+      } else {
+        console.error("Failed to rename chat");
+      }
+    } catch (error) {
+      console.error("Error renaming chat:", error);
+    }
+  };
 
+  const updateSharingSettings = async () => {
+    try {
+      const response = await fetch("/api/chats/update-sharing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatID,
+          viewPermissions,
+          editPermissions,
+        }),
+      });
 
-  // Function to handle sending a new message
+      if (!response.ok) {
+        alert("Failed to update sharing settings");
+      }
+    } catch (error) {
+      console.error("Error updating sharing settings:", error);
+    }
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    // Validate and prepare file uploads if any
     const validFiles = validateFiles(selectedFiles);
     if (!validFiles) return;
 
@@ -96,7 +208,6 @@ export default function Chat() {
       })
     );
 
-    // Append files to the form data
     selectedFiles.forEach((file) => formData.append("files", file));
 
     try {
@@ -117,7 +228,26 @@ export default function Chat() {
     }
   };
 
-  // Handle file selection and validation
+  const deleteChat = async () => {
+    if (!chatID) return;
+
+    try {
+      const response = await fetch("/api/chats/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatID }),
+      });
+
+      if (response.ok) {
+        router.push("/dashboard");
+      } else {
+        console.error("Failed to delete chat");
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles = validateFiles(files);
@@ -126,7 +256,6 @@ export default function Chat() {
     }
   };
 
-  // Function to validate files
   const validateFiles = (files: File[]) => {
     const imageFormats = ["image/png", "image/jpeg", "image/gif", "image/webp"];
     const documentFormats = [
@@ -194,13 +323,11 @@ export default function Chat() {
     return true;
   };
 
-  // Function to handle settings modal opening
   const openSettingsModal = () => setIsSettingsModalOpen(true);
   const closeSettingsModal = () => setIsSettingsModalOpen(false);
 
   return (
     <div className={styles.page}>
-      {/* Page Header */}
       <div className={styles.pageHeader}>
         <div className={styles.backButton} onClick={() => router.push("/dashboard")}>
           Back
@@ -213,7 +340,6 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Page Body - Display Chat Messages */}
       <div className={styles.pageBody}>
         {chat ? (
           chat.messages.length > 0 ? (
@@ -258,33 +384,30 @@ export default function Chat() {
               </div>
             ))
           ) : (
-            <p>No messages yet. Start the conversation!</p>
+            <p className={styles.noMessages} >No messages yet. Start the conversation!</p>
           )
         ) : (
-          <p>Loading chat...</p>
+          <p className={styles.loading}>Loading chat...</p>
         )}
-        {/* Scroll to bottom reference element */}
         <div ref={bottomRef} />
-
       </div>
 
-      {/* Page Footer - Input for Sending Messages and File Upload */}
       <div className={styles.pageFooter}>
         <div className={styles.inputContainer}>
-        <div className={styles.fileInputContainer}>
-          <input
-            type="file"
-            id="file-upload"
-            multiple
-            hidden
-            accept=".png,.jpeg,.gif,.webp,.pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.txt,.md"
-            className={styles.uploadButton}
-            onChange={handleFileChange}
-          />
-          <label htmlFor="file-upload" className={styles.customFileUpload}>
-                ⏏
+          <div className={styles.fileInputContainer}>
+            <input
+              type="file"
+              id="file-upload"
+              multiple
+              hidden
+              accept=".png,.jpeg,.gif,.webp,.pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.txt,.md"
+              className={styles.uploadButton}
+              onChange={handleFileChange}
+            />
+            <label htmlFor="file-upload" className={styles.customFileUpload}>
+              ⏏
             </label>
-        </div>
+          </div>
           <input
             type="text"
             className={styles.messageInput}
@@ -292,7 +415,7 @@ export default function Chat() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === "Enter") sendMessage(); // Send message on pressing Enter
+              if (e.key === "Enter") sendMessage();
             }}
           />
           <button onClick={sendMessage} className={styles.sendButton}>
@@ -301,13 +424,101 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Settings Modal */}
       {isSettingsModalOpen && (
         <div className={styles.modalOverlay} onClick={closeSettingsModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <h2>Settings</h2>
             <div className={styles.modalContent}>
-              <p>Settings options will be available here.</p>
+              <label>
+                Rename Chat:
+                <input
+                  type="text"
+                  placeholder="Enter new chat name"
+                  value={newChatTitle}
+                  onChange={(e) => setNewChatTitle(e.target.value)}
+                  className={styles.input}
+                />
+              </label>
+              <button onClick={renameChat} className={styles.actionButton}>
+                Rename Chat
+              </button>
+
+              {chat?.viewers?.length || chat?.editors?.length ? (
+                <>
+                  <h3>Permissions</h3>
+                  <p>Viewers:</p>
+                  <ul>
+                    {chat?.viewers?.map((viewer) => (
+                      <li key={viewer}>{viewer}</li>
+                    ))}
+                  </ul>
+                  <p>Editors:</p>
+                  <ul>
+                    {chat?.editors?.map((editor) => (
+                      <li key={editor}>{editor}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p>No specific viewers or editors set.</p>
+              )}
+
+              {chat?.admin && (
+                <>
+                  <h3>Manage Permissions</h3>
+                  <div className={styles.permissionsSection}>
+                    <p>Assign Viewers and Editors:</p>
+                    <table className={styles.permissionsTable}>
+                      <thead>
+                        <tr>
+                          <th>Member</th>
+                          <th>View</th>
+                          <th>Edit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {team?.members.map((member) => (
+                          <tr key={member}>
+                            <td>{member}</td>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={viewPermissions[member] || false}
+                                onChange={(e) =>
+                                  setViewPermissions({
+                                    ...viewPermissions,
+                                    [member]: e.target.checked,
+                                  })
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={editPermissions[member] || false}
+                                onChange={(e) =>
+                                  setEditPermissions({
+                                    ...editPermissions,
+                                    [member]: e.target.checked,
+                                  })
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <button onClick={updateSharingSettings} className={styles.actionButton}>
+                      Update Sharing Settings
+                    </button>
+                  </div>
+                </>
+              )}
+
+              <button onClick={deleteChat} className={styles.deleteButton}>
+                Delete Chat
+              </button>
+
               <button onClick={closeSettingsModal} className={styles.closeButton}>
                 Close
               </button>
