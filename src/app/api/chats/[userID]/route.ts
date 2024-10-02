@@ -169,10 +169,9 @@ export async function GET(request: NextRequest) {
 
         // Step 5: Filter team chats based on editor access
         for (const chat of teamChats) {
-            const access = chat.editors.length === 0 || chat.editors.includes(userID);
-            if (!access) {
-                
-                continue};
+            const editorsArray = Array.isArray(chat.editors) ? chat.editors : [];
+            const access = editorsArray.length === 0 || editorsArray.includes(userID);
+            if (!access) continue;
 
             let messages: Message[] = [];
             try {
@@ -180,8 +179,7 @@ export async function GET(request: NextRequest) {
                 messages = await getMessagesFromS3(chat.chatID);
             } catch (error) {
                 console.error(`Failed to retrieve messages from S3 for chatID ${chat.chatID}`, error);
-                
-                continue
+                continue;
             }
 
             chats.push({
@@ -195,6 +193,7 @@ export async function GET(request: NextRequest) {
                 teamTitle: teamTitles[chat.userID] || 'Unknown Team', // Use the retrieved title or a fallback
             });
         }
+
         // Step 6: Get chats associated with the user's ID directly
         const userChats = await getChatsByUserID([userID]);
 
@@ -219,6 +218,7 @@ export async function GET(request: NextRequest) {
 
         
 
+        
         // Return the list of chats
         return NextResponse.json(chats, { status: 200 });
     } catch (error) {

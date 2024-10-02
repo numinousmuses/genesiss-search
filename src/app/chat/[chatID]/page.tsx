@@ -42,6 +42,16 @@ interface Team {
   members: string[];
 }
 
+  // Function to check if a string is a UUID
+  const isEmail = (member: string): boolean => {
+    return member.includes('@');
+  };
+
+  // Function to filter out UUIDs from a list of team members and return only emails
+  const filterMembers = (members: string[]): string[] => {
+    return members.filter((member) => isEmail(member));
+  };
+
 export default function Chat() {
   const [session, setSession] = useState<{
     userId: string;
@@ -116,19 +126,27 @@ export default function Chat() {
 
   const fetchChatMessages = async () => {
     if (!session?.userId) return;
-
+  
     try {
-
-
       const response = await fetch("/api/chats/retrieve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userID: session?.userId, chatID: chatID }),
       });
-
+  
       if (response.ok) {
         const data: ChatResponse = await response.json();
-        setChat(data);
+  
+        // Apply filtering to viewers and editors using filterMembers
+        const filteredViewers = data.viewers ? filterMembers(data.viewers) : [];
+        const filteredEditors = data.editors ? filterMembers(data.editors) : [];
+  
+        // Set the filtered data in state
+        setChat({
+          ...data,
+          viewers: filteredViewers,
+          editors: filteredEditors,
+        });
       } else {
         console.error("Failed to retrieve chat");
       }
