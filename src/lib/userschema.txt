@@ -77,6 +77,7 @@ chat {
     editors: string[], // if team and empty, whole team can access, if not empty, only editors and admins can edit
     viewers: string[], // same principle as above
     timestamp: string,
+    chatContent?: string, // the S3 url to the Messages[] array that is the chat history
     chatGroup?: string,
     chatGroupID?: string,
     brainID?: string

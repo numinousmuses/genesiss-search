@@ -61,6 +61,20 @@ export default function Dashboard() {
   const [viewPermissions, setViewPermissions] = useState<{ [key: string]: boolean }>({});
   const [editPermissions, setEditPermissions] = useState<{ [key: string]: boolean }>({});
 
+  // Function to check if a string is a UUID
+  const isEmail = (member: string): boolean => {
+    return member.includes('@');
+  };
+
+  // Function to filter out UUIDs from a list of team members and return only emails
+  const filterMembers = (members: string[]): string[] => {
+    return members.filter((member) => isEmail(member));
+  };
+
+  const refreshPage = () => {
+    window.location.reload(); // Use any of the methods above here
+  };
+
 
   const router = useRouter();
 
@@ -301,8 +315,7 @@ export default function Dashboard() {
             if (teamResponse.ok) {
               const teamData: Team[] = await teamResponse.json();
               setTeams(teamData);
-              console.log("TEAMDATA")
-              console.log(teamData)
+
             } else {
               setHasError(true);
               console.error("Error fetching teams:", teamResponse.statusText);
@@ -360,23 +373,36 @@ export default function Dashboard() {
         alert("Please enter a chat title.");
         return;
     }
+    
 
     try {
+
+      const params = {
+        userId: session?.userId,
+        chatTitle: newChatTitle,
+        brainID: selectedBrainID === "createNew" ? newBrainID : selectedBrainID,
+        teamID: selectedTeamID,
+        viewPermissions,
+        editPermissions,
+    }
+
         const response = await fetch("/api/chats/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                userId: session?.userId,
-                chatTitle: newChatTitle,
-                brainID: selectedBrainID === "createNew" ? newBrainID : selectedBrainID,
-                teamID: selectedTeamID,
-                viewPermissions,
-                editPermissions,
-            }),
+            body: JSON.stringify(params),
         });
 
         if (response.ok) {
             const { chatID } = await response.json();
+
+
+            
+
+            const chatResponse = await fetch(`/api/chats/${session?.userId}`);
+
+            const chatData: Chat[] = await chatResponse.json();
+            
+
             router.push(`/chat/${chatID}`);
             closeCreateChatModal();
         } else {
@@ -408,6 +434,7 @@ export default function Dashboard() {
   
                   // Call fetchTeams to refresh the teams state
                   fetchTeams(); // Refresh the teams after the team is created
+                  refreshPage();
               } else {
                   console.error('Failed to create team');
                   alert('Failed to create team');
@@ -421,7 +448,7 @@ export default function Dashboard() {
   
   // Function to handle adding a team member
     const addTeamMember = async () => {
-        if (confirm('Are you sure you want to add this member?')) {
+        if (confirm(`Are you sure you want to add ${newMemberEmail} as a new team member?`)) {
         try {
             const response = await fetch(`/api/teams/${selectedTeam.id}/add-member`, {
             method: 'POST',
@@ -429,9 +456,12 @@ export default function Dashboard() {
             body: JSON.stringify({ email: newMemberEmail }),
             });
             if (response.ok) {
-            alert('Member added successfully');
+            alert(`Member ${newMemberEmail} added successfully`);
             setNewMemberEmail('');
+            fetchTeams();
+            refreshPage();
             } else {
+              alert('Failed to add team member');
             console.error('Failed to add team member');
             }
         } catch (error) {
@@ -442,7 +472,7 @@ export default function Dashboard() {
   
     // Function to handle removing a team member
     const removeTeamMember = async () => {
-        if (confirm('Are you sure you want to remove this member?')) {
+        if (confirm(`Are you sure you want to remove ${memberEmailToRemove} from the team?`)) {
         try {
             const response = await fetch(`/api/teams/${selectedTeam.id}/remove-member`, {
             method: 'POST',
@@ -450,9 +480,12 @@ export default function Dashboard() {
             body: JSON.stringify({ email: memberEmailToRemove }),
             });
             if (response.ok) {
-            alert('Member removed successfully');
+            alert(`Member ${memberEmailToRemove} removed successfully`);
             setMemberEmailToRemove('');
+            fetchTeams();
+            refreshPage();
             } else {
+              alert('Failed to remove team member');
             console.error('Failed to remove team member');
             }
         } catch (error) {
@@ -463,7 +496,7 @@ export default function Dashboard() {
   
     // Function to promote a member to admin
     const promoteToAdmin = async () => {
-        if (confirm('Are you sure you want to promote this member to admin?')) {
+        if (confirm(`Are you sure you want to promote ${adminEmail} to admin?`)) {
         try {
             const response = await fetch(`/api/teams/${selectedTeam.id}/promote-member`, {
             method: 'POST',
@@ -471,9 +504,12 @@ export default function Dashboard() {
             body: JSON.stringify({ email: adminEmail }),
             });
             if (response.ok) {
-            alert('Member promoted to admin successfully');
+            alert(`Member ${adminEmail} promoted to admin successfully`);
             setAdminEmail('');
+            fetchTeams();
+            refreshPage();
             } else {
+            alert('Failed to promote member to admin');
             console.error('Failed to promote member to admin');
             }
         } catch (error) {
@@ -484,7 +520,7 @@ export default function Dashboard() {
   
     // Function to delete a team member
     const demoteTeamMember = async () => {
-        if (confirm('Are you sure you want to demote this member?')) {
+        if (confirm(`Are you sure you want to demote ${deleteMemberEmail} from admin?`)) {
         try {
             const response = await fetch(`/api/teams/${selectedTeam.id}/demote-member`, {
             method: 'POST',
@@ -492,15 +528,74 @@ export default function Dashboard() {
             body: JSON.stringify({ email: deleteMemberEmail }),
             });
             if (response.ok) {
-            alert('Member demoted successfully');
+            alert(`Member ${deleteMemberEmail} demoted from admin successfully`);
             setDeleteMemberEmail('');
+            fetchTeams();
+            refreshPage();
             } else {
+            alert('Failed to demote member');
             console.error('Failed to demote member');
             }
         } catch (error) {
             console.error('Error demoting member:', error);
         }
         }
+    };
+
+    // Function to delete a team
+    const deleteTeam = async () => {
+      if (confirm(`Are you sure you want to delete ${selectedTeam.name}?`)) {
+        try {
+          const response = await fetch(`/api/teams/${selectedTeam.id}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          if (response.ok) {
+            alert(`Team ${selectedTeam.name} deleted successfully`);
+            // Refresh the teams state after deletion
+            fetchTeams();
+            setSelectedTeam({} as Team); // Clear the selected team after deletion
+            refreshPage();
+          } else {
+            console.error('Failed to delete team');
+            alert('Failed to delete team');
+          }
+        } catch (error) {
+          console.error('Error deleting team:', error);
+        }
+      }
+    };
+
+    // Function to rename a team
+    const renameTeam = async () => {
+      if (!newTeamTitle.trim()) {
+        alert('Please enter a team title.');
+        return;
+      }
+
+      if (confirm('Are you sure you want to rename this team?')) {
+        try {
+          const response = await fetch(`/api/teams/${selectedTeam.id}/rename`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newTitle: newTeamTitle }),
+          });
+
+          if (response.ok) {
+            alert('Team renamed successfully');
+            // Refresh the teams state after renaming
+            fetchTeams();
+            setNewTeamTitle(''); // Clear input after renaming
+            refreshPage();
+          } else {
+            console.error('Failed to rename team');
+            alert('Failed to rename team');
+          }
+        } catch (error) {
+          console.error('Error renaming team:', error);
+        }
+      }
     };
 
   const openSettingsModal = () => setIsSettingsModalOpen(true); // Open Settings modal
@@ -525,7 +620,7 @@ export default function Dashboard() {
               <p className={styles.username}>Hello, {session.username}!</p>
             </div>
           ) : (
-            <p className={styles.sessionText}>Not logged in</p>
+            <p className={styles.sessionText}>Loading...</p>
           )}
         </div>
         <div className={styles.settings}>
@@ -657,11 +752,11 @@ export default function Dashboard() {
                       <br />
                       <h4>Members:</h4>
                       <ul className={styles.memberList}>
-                        {selectedTeam?.members?.map((member) => (
-                          <li key={member} className={styles.memberItem}>
-                            {member}
-                          </li>
-                        ))}
+                      {filterMembers(selectedTeam?.members || []).map((member) => (
+                        <li key={member} className={styles.memberItem}>
+                          {member} {/* Only email will be shown, UUIDs are filtered out */}
+                        </li>
+                      ))}
                       </ul>
                       <div className={styles.teamActions}>
                         <label className={styles.actionInput}>
@@ -724,6 +819,22 @@ export default function Dashboard() {
                               Demote Team Member
                           </button>
                         </label>
+                        
+                        <label className={styles.actionInput}>
+                          <input
+                            type="text"
+                            placeholder="Enter new team title"
+                            value={newTeamTitle}
+                            onChange={(e) => setNewTeamTitle(e.target.value)}
+                            className={styles.input}
+                          />
+                          <button onClick={renameTeam} className={styles.actionButton}>
+                            Rename Team
+                          </button>
+                        </label>
+                        <button onClick={deleteTeam} className={styles.deleteButton}>
+                          Delete Team
+                        </button>
                     </div>
                     </>
                   )
@@ -818,56 +929,112 @@ export default function Dashboard() {
                         </label>
                       )}
 
-                      {selectedTeamID && teams.length > 0 ? (
-                                <div className={styles.permissionsSection}>
-                                  <h4>Team Members</h4>
-                                  <p>(Leave blank to give all users view and write access)</p>
-                                  <table className={styles.permissionsTable}>
-                                    <thead>
-                                      <tr>
-                                        <th>Member</th>
-                                        <th className={styles.viewHeader}> View</th>
-                                        <th className={styles.editHeader}> Edit</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {teams
-                                        .find((team) => team.id === selectedTeamID)
-                                        ?.members.map((member) => (
-                                          <tr key={member}>
-                                            <td>{member}</td>
-                                            <td>
-                                              <input
-                                                type="checkbox"
-                                                checked={viewPermissions[member] || false}
-                                                onChange={(e) =>
-                                                  setViewPermissions({
-                                                    ...viewPermissions,
-                                                    [member]: e.target.checked,
-                                                  })
-                                                }
-                                              />
-                                            </td>
-                                            <td>
-                                              <input
-                                                type="checkbox"
-                                                checked={editPermissions[member] || false}
-                                                onChange={(e) =>
-                                                  setEditPermissions({
-                                                    ...editPermissions,
-                                                    [member]: e.target.checked,
-                                                  })
-                                                }
-                                              />
-                                            </td>
-                                          </tr>
-                                        ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              ) : (
-                                <p>No team members to assign permissions to.</p>
-                              )} 
+                    {selectedTeamID && teams.length > 0 ? (
+                      <div className={styles.permissionsSection}>
+                        <h4>Team Members</h4>
+                        <p>(Leave blank to give all users view and write access)</p>
+                        <table className={styles.permissionsTable}>
+                          <thead>
+                            <tr>
+                              <th>Member</th>
+                              <th className={styles.viewHeader}> View</th>
+                              <th className={styles.editHeader}> Edit</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filterMembers(
+                              teams.find((team) => team.id === selectedTeamID)?.members || []
+                            ).map((member) => (
+                              <tr key={member}>
+                                <td>{member}</td>
+                                <td>
+                                  <input
+                                    type="checkbox"
+                                    checked={viewPermissions[member] || false}
+                                    onChange={(e) => {
+                                      const newViewPermissions = {
+                                        ...viewPermissions,
+                                        [member]: e.target.checked,
+                                      };
+
+                                      // If edit is checked, make sure view is also checked for that member
+                                      if (editPermissions[member]) {
+                                        newViewPermissions[member] = true;
+                                      }
+
+                                      const newEditPermissions = { ...editPermissions };
+
+                                      // If any permissions are selected for other members, enable the user's view & edit
+                                      const anyOtherMemberSelected =
+                                        Object.keys(newViewPermissions).some(
+                                          (key) => key !== session!.email && (newViewPermissions[key] || newEditPermissions[key])
+                                        ) || Object.keys(newEditPermissions).some(
+                                          (key) => key !== session!.email && newEditPermissions[key]
+                                        );
+
+                                      if (anyOtherMemberSelected) {
+                                        newViewPermissions[session!.email] = true;
+                                        newEditPermissions[session!.email] = true;
+                                      } else {
+                                        // If no other member is selected, deselect both view and edit for the user
+                                        newViewPermissions[session!.email] = false;
+                                        newEditPermissions[session!.email] = false;
+                                      }
+
+                                      setViewPermissions(newViewPermissions);
+                                      setEditPermissions(newEditPermissions);
+                                    }}
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="checkbox"
+                                    checked={editPermissions[member] || false}
+                                    onChange={(e) => {
+                                      const newEditPermissions = {
+                                        ...editPermissions,
+                                        [member]: e.target.checked,
+                                      };
+
+                                      // Automatically check view if edit is selected
+                                      const newViewPermissions = { ...viewPermissions };
+                                      if (e.target.checked) {
+                                        newViewPermissions[member] = true;
+                                      }
+
+                                      // If any permissions are selected for other members, enable the user's view & edit
+                                      const anyOtherMemberSelected =
+                                        Object.keys(newViewPermissions).some(
+                                          (key) => key !== session?.email && (newViewPermissions[key] || newEditPermissions[key])
+                                        ) || Object.keys(newEditPermissions).some(
+                                          (key) => key !== session?.email && newEditPermissions[key]
+                                        );
+
+                                      if (anyOtherMemberSelected) {
+                                        newViewPermissions[session!.email] = true;
+                                        newEditPermissions[session!.email] = true;
+                                      } else {
+                                        // If no other member is selected, deselect both view and edit for the user
+                                        newViewPermissions[session!.email] = false;
+                                        newEditPermissions[session!.email] = false;
+                                      }
+
+                                      setViewPermissions(newViewPermissions);
+                                      setEditPermissions(newEditPermissions);
+                                    }}
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p>No team members to assign permissions to.</p>
+                    )}
+
+
+
 
                       <button onClick={createChat} className={styles.actionButton}>
                           Create Chat

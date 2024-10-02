@@ -166,13 +166,23 @@ export async function GET(request: NextRequest) {
         // Step 4: Get chats associated with user's teams
         const teamChats = await getChatsByUserID(teamIDs);
 
+
         // Step 5: Filter team chats based on editor access
         for (const chat of teamChats) {
             const access = chat.editors.length === 0 || chat.editors.includes(userID);
-            if (!access) continue;
+            if (!access) {
+                
+                continue};
 
-            // Retrieve messages from S3
-            const messages = await getMessagesFromS3(chat.chatID);
+            let messages: Message[] = [];
+            try {
+                // Retrieve messages from S3
+                messages = await getMessagesFromS3(chat.chatID);
+            } catch (error) {
+                console.error(`Failed to retrieve messages from S3 for chatID ${chat.chatID}`, error);
+                
+                continue
+            }
 
             chats.push({
                 chatID: chat.chatID,
@@ -185,7 +195,6 @@ export async function GET(request: NextRequest) {
                 teamTitle: teamTitles[chat.userID] || 'Unknown Team', // Use the retrieved title or a fallback
             });
         }
-
         // Step 6: Get chats associated with the user's ID directly
         const userChats = await getChatsByUserID([userID]);
 
@@ -208,14 +217,12 @@ export async function GET(request: NextRequest) {
             });
         }
 
+        
+
         // Return the list of chats
         return NextResponse.json(chats, { status: 200 });
     } catch (error) {
         console.error("Failed to retrieve chats", error);
-        console.log("\n\n\n\n\n\n\n\n\n")
-        console.log("BIG ERROR")
-        console.log(JSON.stringify(error, null, 2))
-        console.log("\n\n\n\n\n\n\n\n\n")
         return NextResponse.json({ message: "Failed to retrieve chats" }, { status: 500 });
     }
 }

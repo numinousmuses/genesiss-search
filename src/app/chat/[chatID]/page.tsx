@@ -99,6 +99,8 @@ export default function Chat() {
           if (!chatData.some((chat: Chat) => chat.chatID === chatID)) {
             router.push("/dashboard");
           }
+
+          
         }
       } catch (error) {
         router.push("/dashboard");
@@ -117,10 +119,7 @@ export default function Chat() {
 
     try {
 
-      console.log("fetching chat")
-      console.log(session)
-      console.log(session?.userId)
-      console.log(chatID)
+
       const response = await fetch("/api/chats/retrieve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

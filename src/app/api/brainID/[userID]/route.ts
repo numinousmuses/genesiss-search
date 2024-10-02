@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     });
 
     const response = await documentClient.send(command);
+    console.log('DynamoDB response:', response);
 
     // Extract brainIDs from the DynamoDB response
     const brainIDs = response.Items?.map((item) => item.brainID).filter((brainID) => brainID) || [];
