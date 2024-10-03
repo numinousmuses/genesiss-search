@@ -493,7 +493,7 @@ export default function Chat() {
                   </ul>
                 </>
               ) : (
-                <p>No specific viewers or editors set.</p>
+                <p className={styles.noPermissions}>This chat is visible to the whole team.</p>
               )}
 
               {chat?.admin && (

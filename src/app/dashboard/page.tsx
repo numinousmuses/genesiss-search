@@ -344,6 +344,8 @@ export default function Dashboard() {
             const response = await fetch(`/api/brainID/${session.userId}`);
             if (response.ok) {
                 const data = await response.json();
+
+                console.log("Brain IDs:", data);
                 setBrainIDs(data);
             } else {
                 console.error("Failed to fetch brain IDs");
