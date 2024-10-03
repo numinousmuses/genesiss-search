@@ -96,7 +96,7 @@ interface Chat {
     access: boolean, // true if user has edit access. user automatically has edit access for any chat objects where userID is the user's ID, for team chats (chats where userID is the teamID) only if the editors is blank or the user is in editors can this boolean be true
     groupID?: string,
     groupTitle?: string,
-    teamID?: string
+    teamID?: string,
     teamTitle?: string
 }
 

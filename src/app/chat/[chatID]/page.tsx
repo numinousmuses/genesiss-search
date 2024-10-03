@@ -9,6 +9,7 @@ import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { nightOwl } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { format } from "path";
 
 interface Message {
   message: string;
@@ -234,6 +235,9 @@ export default function Chat() {
         author: author,
       })
     );
+    if (chat?.teamID) {
+      formData.append("teamID", chat.teamID);
+    }
 
     selectedFiles.forEach((file) => formData.append("files", file));
 
