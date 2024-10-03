@@ -68,6 +68,7 @@ export default function Chat() {
   const [viewPermissions, setViewPermissions] = useState<{ [key: string]: boolean }>({});
   const [editPermissions, setEditPermissions] = useState<{ [key: string]: boolean }>({});
   const [team, setTeam] = useState<Team | null>(null); // To handle sharing settings
+  const [canSendMessage, setCanSendMessage] = useState(true);
 
   const router = useRouter();
   const params = useParams();
@@ -131,15 +132,17 @@ export default function Chat() {
       const response = await fetch("/api/chats/retrieve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID: session?.userId, chatID: chatID }),
+        body: JSON.stringify({ userID: session?.userId, chatID: chatID, email: session?.email }),
       });
   
       if (response.ok) {
         const data: ChatResponse = await response.json();
+
+        console.log("Data:", data);
   
-        // Apply filtering to viewers and editors using filterMembers
-        const filteredViewers = data.viewers ? filterMembers(data.viewers) : [];
-        const filteredEditors = data.editors ? filterMembers(data.editors) : [];
+        // Ensure viewers and editors are arrays before filtering
+      const filteredViewers = Array.isArray(data.viewers) ? filterMembers(data.viewers) : [];
+      const filteredEditors = Array.isArray(data.editors) ? filterMembers(data.editors) : [];
   
         // Set the filtered data in state
         setChat({
@@ -147,6 +150,12 @@ export default function Chat() {
           viewers: filteredViewers,
           editors: filteredEditors,
         });
+
+      
+      // if there is a teamID, and if the user is not in the editors, but is in the viewers for the chat, set canSendMessage to false
+      if (data.teamID && !filteredEditors.includes(session?.email) && filteredViewers.includes(session?.email)) {
+        setCanSendMessage(false);
+      }
       } else {
         console.error("Failed to retrieve chat");
       }
@@ -201,10 +210,11 @@ export default function Chat() {
         }),
       });
 
-      if (!response.ok) {
-        alert("Failed to update sharing settings");
+      if (response.ok) {
+        alert("Updated sharing settings");
       }
     } catch (error) {
+      alert("Error updating sharing settings");
       console.error("Error updating sharing settings:", error);
     }
   };
@@ -409,7 +419,11 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      <div className={styles.pageFooter}>
+      
+
+
+
+      { canSendMessage && <div className={styles.pageFooter}>
         <div className={styles.inputContainer}>
           <div className={styles.fileInputContainer}>
             <input
@@ -439,7 +453,7 @@ export default function Chat() {
             Send
           </button>
         </div>
-      </div>
+      </div>}
 
       {isSettingsModalOpen && (
         <div className={styles.modalOverlay} onClick={closeSettingsModal}>
@@ -448,6 +462,8 @@ export default function Chat() {
             <div className={styles.modalContent}>
               <label>
                 Rename Chat:
+                <br />
+                <br />
                 <input
                   type="text"
                   placeholder="Enter new chat name"
@@ -494,31 +510,92 @@ export default function Chat() {
                         </tr>
                       </thead>
                       <tbody>
-                        {team?.members.map((member) => (
-                          <tr key={member}>
-                            <td>{member}</td>
+                        {/* Loop over viewers */}
+                        {chat.viewers?.map((viewer) => (
+                          <tr key={viewer}>
+                            <td>{viewer}</td>
                             <td>
                               <input
                                 type="checkbox"
-                                checked={viewPermissions[member] || false}
-                                onChange={(e) =>
-                                  setViewPermissions({
+                                checked={viewPermissions[viewer] ?? (chat.viewers ?? []).includes(viewer)}
+                                onChange={(e) => {
+                                  const newViewPermissions = {
                                     ...viewPermissions,
-                                    [member]: e.target.checked,
-                                  })
-                                }
+                                    [viewer]: e.target.checked,
+                                  };
+
+                                  // If the editor permission is checked, ensure the view permission remains checked
+                                  if (editPermissions[viewer]) {
+                                    newViewPermissions[viewer] = true;
+                                  }
+
+                                  setViewPermissions(newViewPermissions);
+                                }}
                               />
                             </td>
                             <td>
                               <input
                                 type="checkbox"
-                                checked={editPermissions[member] || false}
-                                onChange={(e) =>
-                                  setEditPermissions({
+                                checked={editPermissions[viewer] ?? (chat.editors ?? []).includes(viewer)}
+                                onChange={(e) => {
+                                  const newEditPermissions = {
                                     ...editPermissions,
-                                    [member]: e.target.checked,
-                                  })
-                                }
+                                    [viewer]: e.target.checked,
+                                  };
+
+                                  const newViewPermissions = { ...viewPermissions };
+
+                                  // Automatically enable view permission if edit is checked
+                                  if (e.target.checked) {
+                                    newViewPermissions[viewer] = true;
+                                  }
+
+                                  setEditPermissions(newEditPermissions);
+                                  setViewPermissions(newViewPermissions);
+                                }}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+
+                        {/* Loop over editors not included in viewers */}
+                        {chat.editors?.filter((editor) => !chat.viewers?.includes(editor)).map((editor) => (
+                          <tr key={editor}>
+                            <td>{editor}</td>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={viewPermissions[editor] ?? (chat.viewers ?? []).includes(editor)}
+                                onChange={(e) => {
+                                  const newViewPermissions = {
+                                    ...viewPermissions,
+                                    [editor]: e.target.checked,
+                                  };
+
+                                  setViewPermissions(newViewPermissions);
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={editPermissions[editor] ?? (chat.editors ?? []).includes(editor)}
+                                onChange={(e) => {
+                                  const newEditPermissions = {
+                                    ...editPermissions,
+                                    [editor]: e.target.checked,
+                                  };
+
+                                  const newViewPermissions = { ...viewPermissions };
+
+                                  // Automatically enable view permission if edit is checked
+                                  if (e.target.checked) {
+                                    newViewPermissions[editor] = true;
+                                  }
+
+                                  setEditPermissions(newEditPermissions);
+                                  setViewPermissions(newViewPermissions);
+                                }}
                               />
                             </td>
                           </tr>
@@ -531,6 +608,10 @@ export default function Chat() {
                   </div>
                 </>
               )}
+
+
+
+
 
               <button onClick={deleteChat} className={styles.deleteButton}>
                 Delete Chat

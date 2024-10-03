@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import * as stream from 'stream';
 import { Resource } from "sst";
@@ -32,7 +32,7 @@ const documentClient = DynamoDBDocumentClient.from(dynamoDbClient);
 export async function POST(request: NextRequest) {
     try {
         // Parse the request body to get the userID and chatID
-        const { userID, chatID } = await request.json();
+        const { userID, chatID, email } = await request.json();
 
         if (!userID || !chatID) {
             return NextResponse.json({ message: "Invalid or missing parameters" }, { status: 400 });
@@ -128,14 +128,18 @@ export const streamToString = (stream: stream.Readable): Promise<string> =>
     });
 
 // Function to check if the user has access to the chat
+// Function to check if the user has access to the chat
 async function checkChatAccess(userID: string, chatData: any): Promise<boolean> {
+    const viewersArray = Array.isArray(chatData.viewers) ? chatData.viewers : [];
+    const editorsArray = Array.isArray(chatData.editors) ? chatData.editors : [];
+
     // Check if the user is listed as a viewer or editor
-    if (chatData.viewers.includes(userID) || chatData.editors.includes(userID)) {
+    if (viewersArray.includes(userID) || editorsArray.includes(userID)) {
         return true;
     }
 
     // If there are no specific viewers or editors, check if the entire team has access
-    if (chatData.editors.length === 0 ) {
+    if (editorsArray.length === 0) {
         return true;
     }
 
@@ -152,6 +156,7 @@ async function checkChatAccess(userID: string, chatData: any): Promise<boolean> 
         }
     }
 
+    // If the userID is the same as the owner of the chat, grant access
     if (chatData.userID === userID) {
         return true;
     }
@@ -159,26 +164,65 @@ async function checkChatAccess(userID: string, chatData: any): Promise<boolean> 
     return false; // If none of the conditions are met, deny access
 }
 
+
+// Function to check if the user is an admin for the chat
+// Function to check if the user is an admin for the chat
 // Function to check if the user is an admin for the chat
 async function checkIfAdmin(userID: string, chatData: any): Promise<boolean> {
+    const editorsArray = Array.isArray(chatData.editors) ? chatData.editors : [];
+    const viewersArray = Array.isArray(chatData.viewers) ? chatData.viewers : [];
+    let isAdmin = false;
+
     // Check if the user is in the editors list
-    if (chatData.editors.includes(userID)) {
-        return true;
+    if (editorsArray.includes(userID)) {
+        isAdmin = true;
     }
 
     // If the chat belongs to a team, check if the user is an admin of that team
     if (chatData.teamID) {
         const teamData = await getTeamFromDynamoDB(chatData.teamID);
         if (teamData && teamData.admins.includes(userID)) {
-            return true;
+            isAdmin = true;
+
+            // If the user is an admin but not in viewers or editors, add them
+            if (!viewersArray.includes(userID)) {
+                viewersArray.push(userID);
+            }
+
+            if (!editorsArray.includes(userID)) {
+                editorsArray.push(userID);
+            }
+
+            // Update the chat with the new viewers and editors lists
+            await updateChatPermissions(chatData.chatID, viewersArray, editorsArray);
         }
     }
 
+    // If the userID is the same as the owner of the chat, grant admin rights
     if (chatData.userID === userID) {
-        return true;
+        isAdmin = true;
     }
 
-    return false; // User is not an admin
+    return isAdmin; // Return true if the user is an admin
+}
+
+// Helper function to update chat permissions in DynamoDB
+async function updateChatPermissions(chatID: string, viewersArray: string[], editorsArray: string[]) {
+    try {
+        const updateCommand = new UpdateCommand({
+            TableName: Resource.ChatsTable.name,
+            Key: { chatID },
+            UpdateExpression: "SET viewers = :viewers, editors = :editors",
+            ExpressionAttributeValues: {
+                ":viewers": viewersArray,
+                ":editors": editorsArray,
+            },
+        });
+
+        await documentClient.send(updateCommand);
+    } catch (error) {
+        console.error("Error updating chat permissions in DynamoDB:", error);
+    }
 }
 
 // Function to retrieve team data from DynamoDB using teamID
