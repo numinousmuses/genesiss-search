@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     // Store session data in DynamoDB
     const secondres = await dynamoDB.send(new PutItemCommand({
-      TableName: Resource.GenesissSearchSessionsTable.name,
+      TableName: Resource.GenesissAgentsSessionsTable.name,
       Item: {
         sessionId: { S: sessionId },
         userId: { S: userId },

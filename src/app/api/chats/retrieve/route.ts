@@ -100,7 +100,7 @@ async function getChatFromDynamoDB(chatID: string) {
 async function getMessagesFromS3(chatID: string): Promise<Message[]> {
     try {
         const command = new GetObjectCommand({
-            Bucket: Resource.GenesissSearchBucket.name, // Replace with your S3 bucket name
+            Bucket: Resource.GenesissAgentsBucket.name, // Replace with your S3 bucket name
             Key: chatID, // The S3 key is the same as the chatID
         });
         const response = await s3Client.send(command);

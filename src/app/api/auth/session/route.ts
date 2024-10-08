@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await dynamoDB.send(new GetCommand({
-      TableName: Resource.GenesissSearchSessionsTable.name,
+      TableName: Resource.GenesissAgentsSessionsTable.name,
       Key: {
         sessionId: sessionId,
         userId: userId,

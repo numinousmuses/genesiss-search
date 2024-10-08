@@ -4,22 +4,22 @@
 export default $config({
   app(input) {
     return {
-      name: "genesiss-search",
+      name: "genesiss-agents",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };
   },
   async run() {
 
-    const bucket = new sst.aws.Bucket("GenesissSearchBucket");
+    const bucket = new sst.aws.Bucket("GenesissAgentsBucket");
 
-    const publicbucket = new sst.aws.Bucket("GenesissSearchPublicBucket", {
+    const publicbucket = new sst.aws.Bucket("GenesissAgentsPublicBucket", {
       public: true
     });
 
-    const genesisssearchapikey = new sst.Secret("GenesissSearchAPIKey")
+    const genesisssearchapikey = new sst.Secret("GenesissAgentsAPIKey")
 
-    const SessionsTable = new sst.aws.Dynamo("GenesissSearchSessionsTable", {
+    const SessionsTable = new sst.aws.Dynamo("GenesissAgentsSessionsTable", {
       fields: {
         sessionId: "string",
         userId: "string",
@@ -63,7 +63,8 @@ export default $config({
         finaluserstable,
         chatstable,
         teamstable
-      ]
+      ],
+      domain: "agents.genesiss.tech",
     });
   },
 });

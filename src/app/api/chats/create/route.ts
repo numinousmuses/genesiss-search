@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // Step 2: Initialize the chat content in S3 with an empty array of messages
     const initialChatContent = JSON.stringify([]);
     const s3Params = {
-      Bucket: Resource.GenesissSearchBucket.name, // Replace with your S3 bucket name
+      Bucket: Resource.GenesissAgentsBucket.name, // Replace with your S3 bucket name
       Key: chatID, // The chatID will be used as the S3 key
       Body: initialChatContent,
       ContentType: "application/json",

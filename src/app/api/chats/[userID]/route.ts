@@ -50,7 +50,7 @@ const s3Client = new S3Client({ region: 'us-east-1' });
 async function getMessagesFromS3(chatID: string): Promise<Message[]> {
     try {
         const command = new GetObjectCommand({
-            Bucket: Resource.GenesissSearchBucket.name, // Replace with your S3 bucket name
+            Bucket: Resource.GenesissAgentsBucket.name, // Replace with your S3 bucket name
             Key: chatID, // Key is the same as chatID
         });
         const response = await s3Client.send(command);

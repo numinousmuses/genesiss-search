@@ -13,25 +13,25 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Dynamo"
     }
-    "GenesissSearch": {
-      "type": "sst.aws.Nextjs"
-      "url": string
-    }
-    "GenesissSearchAPIKey": {
+    "GenesissAgentsAPIKey": {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "GenesissSearchBucket": {
+    "GenesissAgentsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "GenesissSearchPublicBucket": {
+    "GenesissAgentsPublicBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "GenesissSearchSessionsTable": {
+    "GenesissAgentsSessionsTable": {
       "name": string
       "type": "sst.aws.Dynamo"
+    }
+    "GenesissSearch": {
+      "type": "sst.aws.Nextjs"
+      "url": string
     }
     "TeamsTable": {
       "name": string

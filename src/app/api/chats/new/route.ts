@@ -44,7 +44,7 @@ const streamToString = (stream: stream.Readable): Promise<string> =>
 const getChatFromS3 = async (chatID: string): Promise<ChatObject | null> => {
   try {
     const command = new GetObjectCommand({
-      Bucket: Resource.GenesissSearchBucket.name, // Your S3 bucket name
+      Bucket: Resource.GenesissAgentsBucket.name, // Your S3 bucket name
       Key: chatID, // The chatID is used as the key
     });
 
@@ -65,7 +65,7 @@ const getChatFromS3 = async (chatID: string): Promise<ChatObject | null> => {
 const uploadChatToS3 = async (chatID: string, updatedChat: ChatObject): Promise<void> => {
   try {
     const command = new PutObjectCommand({
-      Bucket: Resource.GenesissSearchBucket.name, // Your S3 bucket name
+      Bucket: Resource.GenesissAgentsBucket.name, // Your S3 bucket name
       Key: chatID,
       Body: JSON.stringify(updatedChat),
       ContentType: "application/json",
@@ -97,7 +97,7 @@ const sendMessageToChatAPI = async (
 ): Promise<ChatResponse> => {
   try {
     const apiUrl = "https://genesiss.tech/api/chat";
-    const apiKey = Resource.GenesissSearchAPIKey.value; // Replace with the actual API key
+    const apiKey = Resource.GenesissAgentsAPIKey.value; // Replace with the actual API key
 
     const chatRequest: ChatRequest = {
       ak: apiKey,
