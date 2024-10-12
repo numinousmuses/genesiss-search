@@ -3,7 +3,12 @@
 import styles from "./workflows.module.css";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { nightOwl } from "react-syntax-highlighter/dist/cjs/styles/prism";
 interface WorkflowOutput {
   runDate: string;
   output: string;
@@ -18,6 +23,20 @@ interface Workflow {
   createdAt: string;
   outputs: WorkflowOutput[];
 }
+
+interface WorkflowAgentArray {
+  agentID: "internet" | "codegen" | "graphgen" | "imagegen" | "docucomp" | "memstore" | "memsearch" | "simplechat" | "presentgen";
+  inputs: any[]
+}
+
+interface WorkflowConfiguration {
+  title: string;
+  description: string;
+  frequency: string;
+  createdAt: string;
+  agents: WorkflowAgentArray[][],
+}
+
 
 export default function Workflows() {
   const [session, setSession] = useState<{
@@ -112,8 +131,17 @@ export default function Workflows() {
   }, [router, session]);
 
   const fetchWorkflows = async (userId: string) => {
-    setWorkflows(sampleWorkflows);
+    try {
+      const response = await fetch(`/api/workflow/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setWorkflows(data);
+      }
+    } catch (error) {
+      console.error("Error fetching workflows:", error);
+    }
   };
+
 
   const handleLogout = async () => {
     try {
@@ -206,7 +234,7 @@ export default function Workflows() {
           )}
         </div>
         <div className={styles.settings}>
-          <button className={styles.logoutButton} onClick={() => router.push("/workflow/new")}>New Workflow</button>
+          <button className={styles.logoutButton} onClick={() => router.push("/workflows/new")}>New Workflow</button>
           <button onClick={() => router.push("/dashboard")} className={styles.logoutButton}>Back to Chats</button>
           <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
         </div>
@@ -214,16 +242,27 @@ export default function Workflows() {
 
       <div className={styles.content}>
         {selectedWorkflow ? (
+          <div>
+          <button className={styles.backButton} onClick={backToCards}>Back to Card View</button>
           <div className={styles.workflowDetail}>
-            <button onClick={backToCards}>Back to Card View</button>
-            <div className={styles.workflowMainInfo}>
-              <h2>{selectedWorkflow.title}</h2>
-              <p>{selectedWorkflow.description}</p>
-              <p>Status: {selectedWorkflow.outputs[selectedWorkflow.outputs.length - 1]?.status}</p>
-              <p>Frequency: {selectedWorkflow.frequency}</p>
-              <p>Created: {selectedWorkflow.createdAt}</p>
-              <p>Last Run: {selectedWorkflow.outputs[selectedWorkflow.outputs.length - 1]?.runDate}</p>
+            <div className={styles.workflowLeft}>
+              
+              <div className={styles.workflowMainInfo}>
+                <h2>{selectedWorkflow.title}</h2>
+                <p>Created: {selectedWorkflow.createdAt}</p>
+                <p>Last Run: {selectedWorkflow.outputs[selectedWorkflow.outputs.length - 1]?.runDate}</p>
+                <strong>Description: </strong>
+                <p>{selectedWorkflow.description}</p>
+                <div className={styles.workflowTags}>
+                  <p><strong>Status: </strong>{selectedWorkflow.outputs[selectedWorkflow.outputs.length - 1]?.status}</p>
+                  <p><strong>Frequency: </strong>{selectedWorkflow.frequency}</p>
+                  
+                  <p><strong>Average Credits Consumed per Run: </strong>{calculateAverageCredits()}</p>
+                  <p><strong>Total Credits Consumed: </strong>{calculateTotalCredits()}</p>
+                </div>
+              </div>
             </div>
+            
 
             <div className={styles.workflowOutputs}>
               <button onClick={expandAllOutputs}>Expand All</button>
@@ -246,28 +285,62 @@ export default function Workflows() {
                   <p>Credits Consumed: {output.creditsConsumed}</p>
                   {expandedOutputs[index] && (
                     <div className={styles.outputContent}>
-                      <p>{output.output}</p>
+                      <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    className={styles.markdown}
+                    components={{
+                      code({ node, inline, className, children, ...props }: any) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                          <SyntaxHighlighter
+                            style={nightOwl}
+                            PreTag="div"
+                            language={match[1]}
+                            {...props}
+                            className={styles.codeRender}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {output.output}
+                  </ReactMarkdown>
                     </div>
                   )}
                 </div>
               ))}
             </div>
-            <p>Average Credits Consumed per Run: {calculateAverageCredits()}</p>
-            <p>Total Credits Consumed: {calculateTotalCredits()}</p>
+            
+          </div>
           </div>
         ) : (
           <div className={styles.workflowCards}>
             {workflows.map((workflow, index) => (
               <div key={index} className={styles.workflowCard} onClick={() => selectWorkflow(workflow)}>
-                <h3>{workflow.title}</h3>
-                <p>{workflow.description.slice(0, 50)}...</p>
-                <p>Frequency: {workflow.frequency}</p>
-                <p>Last Run: {workflow.outputs[workflow.outputs.length - 1]?.runDate}</p>
-                <p>Status: {workflow.outputs[workflow.outputs.length - 1]?.status}</p>
+                <div className={styles.workflowHeader}>
+                  <h3>{workflow.title}</h3>
+                  <p><strong>Last Run: </strong>{workflow.outputs[workflow.outputs.length - 1]?.runDate}</p>
+                </div>
+
+                <div className={styles.workflowDescription}><strong>Description:</strong><p>{workflow.description.slice(0, 50)}...</p></div>
+                
+                <div className={styles.workflowDetails}>
+                  <p><strong>Frequency: </strong>{workflow.frequency}</p>
+                  <p><strong>Status: </strong>{workflow.outputs[workflow.outputs.length - 1]?.status}</p>
+                </div>
               </div>
             ))}
           </div>
-        )}
+        )
+        
+        }
       </div>
       <div className={styles.footer}></div>
     </div>
