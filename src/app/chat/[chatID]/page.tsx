@@ -19,10 +19,6 @@ interface Message {
 
 interface ChatResponse {
   chatTitle: string;
-  teamID?: string;
-  viewers?: string[]; // viewers and editors can view the chat, only editors can edit
-  editors?: string[];
-  admin?: boolean; // true if the user is an admin, so they can edit the Viewers/Editors of the chat
   brainID?: string;
   messages: Message[];
 }
@@ -30,28 +26,22 @@ interface ChatResponse {
 interface Chat {
   chatID: string,
   chatTitle: string,
-  groupID?: string,
-  groupTitle?: string,
-  teamID?: string,
   teamTitle?: string,
   messages?: Message[],
 }
 
-interface Team {
-  id: string;
-  name: string;
-  members: string[];
-}
+// Function to check if a string is a UUID
+const isEmail = (member: string): boolean => {
+  return member.includes('@');
+};
 
-  // Function to check if a string is a UUID
-  const isEmail = (member: string): boolean => {
-    return member.includes('@');
-  };
+// Function to filter out UUIDs from a list of team members and return only emails
+const filterMembers = (members: string[]): string[] => {
+  return members.filter((member) => isEmail(member));
+};
 
-  // Function to filter out UUIDs from a list of team members and return only emails
-  const filterMembers = (members: string[]): string[] => {
-    return members.filter((member) => isEmail(member));
-  };
+const agents = ["internet", "codegen", "graphgen", "imagegen", "docucomp", "memstore", "memsearch", "simplechat"];
+
 
 export default function Chat() {
   const [session, setSession] = useState<{
@@ -68,8 +58,10 @@ export default function Chat() {
   const [newChatTitle, setNewChatTitle] = useState(""); // For renaming chat
   const [viewPermissions, setViewPermissions] = useState<{ [key: string]: boolean }>({});
   const [editPermissions, setEditPermissions] = useState<{ [key: string]: boolean }>({});
-  const [team, setTeam] = useState<Team | null>(null); // To handle sharing settings
   const [canSendMessage, setCanSendMessage] = useState(true);
+  const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
+  const [filteredAgents, setFilteredAgents] = useState<string[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
   const router = useRouter();
   const params = useParams();
@@ -140,23 +132,12 @@ export default function Chat() {
         const data: ChatResponse = await response.json();
 
         console.log("Data:", data);
-  
-        // Ensure viewers and editors are arrays before filtering
-      const filteredViewers = Array.isArray(data.viewers) ? filterMembers(data.viewers) : [];
-      const filteredEditors = Array.isArray(data.editors) ? filterMembers(data.editors) : [];
+
   
         // Set the filtered data in state
-        setChat({
-          ...data,
-          viewers: filteredViewers,
-          editors: filteredEditors,
-        });
+        setChat(data);
 
       
-      // if there is a teamID, and if the user is not in the editors, but is in the viewers for the chat, set canSendMessage to false
-      if (data.teamID && !filteredEditors.includes(session?.email) && filteredViewers.includes(session?.email)) {
-        setCanSendMessage(false);
-      }
       } else {
         console.error("Failed to retrieve chat");
       }
@@ -199,25 +180,32 @@ export default function Chat() {
     }
   };
 
-  const updateSharingSettings = async () => {
-    try {
-      const response = await fetch("/api/chats/update-sharing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chatID,
-          viewPermissions,
-          editPermissions,
-        }),
-      });
-
-      if (response.ok) {
-        alert("Updated sharing settings");
-      }
-    } catch (error) {
-      alert("Error updating sharing settings");
-      console.error("Error updating sharing settings:", error);
+  const handleAgentMention = (text: string) => {
+    const match = text.match(/@(\w*)$/);
+    if (match) {
+      const query = match[1].toLowerCase();
+      setFilteredAgents(agents.filter((agent) => agent.startsWith(query)));
+      setIsAgentMenuOpen(true);
+    } else {
+      setIsAgentMenuOpen(false);
     }
+  };
+
+  const handleAgentSelect = (agent: string) => {
+    setSelectedAgent(agent);
+    setNewMessage(`@${agent} `);
+    setIsAgentMenuOpen(false);
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+    handleAgentMention(value);
+    // if ((value.match(/@/g) || []).length <= 1) {
+      
+    // } else {
+    //   alert("Only one @mention is allowed per message.");
+    // }
   };
 
   const sendMessage = async () => {
@@ -235,9 +223,7 @@ export default function Chat() {
         author: author,
       })
     );
-    if (chat?.teamID) {
-      formData.append("teamID", chat.teamID);
-    }
+    if (selectedAgent) formData.append("agent", selectedAgent);
 
     selectedFiles.forEach((file) => formData.append("files", file));
 
@@ -427,9 +413,11 @@ export default function Chat() {
 
 
 
-      { canSendMessage && <div className={styles.pageFooter}>
-        <div className={styles.inputContainer}>
-          <div className={styles.fileInputContainer}>
+      {canSendMessage && (
+        <div className={styles.pageFooter}>
+          
+          <div className={styles.inputContainer}>
+            
             <input
               type="file"
               id="file-upload"
@@ -439,25 +427,40 @@ export default function Chat() {
               className={styles.uploadButton}
               onChange={handleFileChange}
             />
-            <label htmlFor="file-upload" className={styles.customFileUpload}>
-              ⏏
-            </label>
+            <label htmlFor="file-upload" className={styles.customFileUpload}>⏏</label>
+            <input
+              type="text"
+              className={styles.messageInput}
+              placeholder="Type your message... Tip: use the @ symbol to select an agent"
+              value={newMessage}
+              onChange={handleMessageChange}
+              onKeyPress={(e) => { if (e.key === "Enter") sendMessage(); }}
+            />
+            <button onClick={sendMessage} className={styles.sendButton}>Send</button>
           </div>
-          <input
-            type="text"
-            className={styles.messageInput}
-            placeholder="Type your message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
-          />
-          <button onClick={sendMessage} className={styles.sendButton}>
-            Send
-          </button>
+
+          {isAgentMenuOpen && (
+            <div className={styles.agentMenu}>
+              {filteredAgents.map((agent) => (
+                <div
+                  key={agent}
+                  className={styles.agentMenuItem}
+                  onClick={() => handleAgentSelect(agent)}
+                >
+                  {agent}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedAgent && !isAgentMenuOpen && (
+            <div className={styles.selectedAgentDisplay}>
+              Selected Agent: <span className={styles.selectedAgent}>{selectedAgent}</span>
+            </div>
+          )}
+
         </div>
-      </div>}
+      )}
 
       {isSettingsModalOpen && (
         <div className={styles.modalOverlay} onClick={closeSettingsModal}>
@@ -479,143 +482,6 @@ export default function Chat() {
               <button onClick={renameChat} className={styles.actionButton}>
                 Rename Chat
               </button>
-
-              {chat?.viewers?.length || chat?.editors?.length ? (
-                <>
-                  <h3>Permissions</h3>
-                  <p>Viewers:</p>
-                  <ul>
-                    {chat?.viewers?.map((viewer) => (
-                      <li key={viewer}>{viewer}</li>
-                    ))}
-                  </ul>
-                  <p>Editors:</p>
-                  <ul>
-                    {chat?.editors?.map((editor) => (
-                      <li key={editor}>{editor}</li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <p className={styles.noPermissions}>This chat is visible to the whole team.</p>
-              )}
-
-              {chat?.admin && (
-                <>
-                  <h3>Manage Permissions</h3>
-                  <div className={styles.permissionsSection}>
-                    <p>Assign Viewers and Editors:</p>
-                    <table className={styles.permissionsTable}>
-                      <thead>
-                        <tr>
-                          <th>Member</th>
-                          <th>View</th>
-                          <th>Edit</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* Loop over viewers */}
-                        {chat.viewers?.map((viewer) => (
-                          <tr key={viewer}>
-                            <td>{viewer}</td>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={viewPermissions[viewer] ?? (chat.viewers ?? []).includes(viewer)}
-                                onChange={(e) => {
-                                  const newViewPermissions = {
-                                    ...viewPermissions,
-                                    [viewer]: e.target.checked,
-                                  };
-
-                                  // If the editor permission is checked, ensure the view permission remains checked
-                                  if (editPermissions[viewer]) {
-                                    newViewPermissions[viewer] = true;
-                                  }
-
-                                  setViewPermissions(newViewPermissions);
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={editPermissions[viewer] ?? (chat.editors ?? []).includes(viewer)}
-                                onChange={(e) => {
-                                  const newEditPermissions = {
-                                    ...editPermissions,
-                                    [viewer]: e.target.checked,
-                                  };
-
-                                  const newViewPermissions = { ...viewPermissions };
-
-                                  // Automatically enable view permission if edit is checked
-                                  if (e.target.checked) {
-                                    newViewPermissions[viewer] = true;
-                                  }
-
-                                  setEditPermissions(newEditPermissions);
-                                  setViewPermissions(newViewPermissions);
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-
-                        {/* Loop over editors not included in viewers */}
-                        {chat.editors?.filter((editor) => !chat.viewers?.includes(editor)).map((editor) => (
-                          <tr key={editor}>
-                            <td>{editor}</td>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={viewPermissions[editor] ?? (chat.viewers ?? []).includes(editor)}
-                                onChange={(e) => {
-                                  const newViewPermissions = {
-                                    ...viewPermissions,
-                                    [editor]: e.target.checked,
-                                  };
-
-                                  setViewPermissions(newViewPermissions);
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={editPermissions[editor] ?? (chat.editors ?? []).includes(editor)}
-                                onChange={(e) => {
-                                  const newEditPermissions = {
-                                    ...editPermissions,
-                                    [editor]: e.target.checked,
-                                  };
-
-                                  const newViewPermissions = { ...viewPermissions };
-
-                                  // Automatically enable view permission if edit is checked
-                                  if (e.target.checked) {
-                                    newViewPermissions[editor] = true;
-                                  }
-
-                                  setEditPermissions(newEditPermissions);
-                                  setViewPermissions(newViewPermissions);
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <button onClick={updateSharingSettings} className={styles.actionButton}>
-                      Update Sharing Settings
-                    </button>
-                  </div>
-                </>
-              )}
-
-
-
-
 
               <button onClick={deleteChat} className={styles.deleteButton}>
                 Delete Chat

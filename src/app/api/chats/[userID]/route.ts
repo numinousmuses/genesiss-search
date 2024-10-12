@@ -10,10 +10,6 @@ interface Chat {
     chatTitle: string,
     timestamp: string,
     messages: Message[],
-    groupID?: string,
-    groupTitle?: string,
-    teamID?: string,
-    teamTitle?: string,
     brainID?: string,
 }
 
@@ -25,20 +21,12 @@ interface Message {
 interface DatabaseChat {
     chatTitle: string,
     chatID: string, // primary index, also the S3 key for the chat object
-    userID: string, // global secondary index, equals the teamID if team, otherwise is a user's ID
-    editors: string[], // if team and empty, whole team can access, if not empty, only editors and admins can edit
-    viewers: string[], // same principle as above
-    messages: string, //s3 link to an object:  Message[] stored in S3
+    userID: string, // equals the user's ID
+    editors: string[], // if empty, user can access
+    viewers: string[], // if empty, user can access
+    messages: string, // s3 link to an object:  Message[] stored in S3
     timestamp: string,
-    chatGroup?: string,
-    chatGroupID?: string,
-}
-
-interface Team {
-    teamID: string;
-    teamName: string;
-    admins: string[];
-    members: string[];
+    brainID?: string,
 }
 
 // Initialize AWS clients
@@ -74,76 +62,26 @@ async function streamToString(stream: any): Promise<string> {
     });
 }
 
-// Helper function to get chats based on userID or teamIDs
-async function getChatsByUserID(userIDs: string[]): Promise<DatabaseChat[]> {
-    const chats: DatabaseChat[] = [];
-    for (const userID of userIDs) {
-        try {
-            const command = new QueryCommand({
-                TableName: Resource.ChatsTable.name, // Replace with your DynamoDB table name
-                IndexName: "CreatedAtIndex", // Replace with your GSI name
-                KeyConditionExpression: 'userID = :userID',
-                ExpressionAttributeValues: {
-                    ':userID': userID,
-                },
-            });
-            const response = await documentClient.send(command);
-            if (response.Items) {
-                chats.push(...(response.Items as DatabaseChat[]));
-            }
-        } catch (error) {
-            console.error(`Failed to retrieve chats for userID ${userID}`, error);
-        }
-    }
-    return chats;
-}
-
-// Helper function to get user's teams from DynamoDB
-async function getUserTeams(userID: string): Promise<string[]> {
+// Helper function to get chats based on userID
+async function getChatsByUserID(userID: string): Promise<DatabaseChat[]> {
     try {
-        const command = new GetCommand({
-            TableName: Resource.FinalUsersTable.name, // Replace with your actual table name
-            Key: {
-                userID: userID,
+        const command = new QueryCommand({
+            TableName: Resource.ChatsTable.name, // Replace with your DynamoDB table name
+            IndexName: "CreatedAtIndex", // Replace with your GSI name
+            KeyConditionExpression: 'userID = :userID',
+            ExpressionAttributeValues: {
+                ':userID': userID,
             },
         });
-
         const response = await documentClient.send(command);
-
-        if (response.Item && response.Item.teams) {
-            return response.Item.teams;
-        } else {
-            return [];
+        if (response.Items) {
+            return response.Items as DatabaseChat[];
         }
+        return [];
     } catch (error) {
-        console.error(`Failed to retrieve teams for userID ${userID}`, error);
+        console.error(`Failed to retrieve chats for userID ${userID}`, error);
         return [];
     }
-}
-
-// Helper function to get team titles from the teams table
-async function getTeamTitles(teamIDs: string[]): Promise<Record<string, string>> {
-    const teamTitles: Record<string, string> = {};
-    for (const teamID of teamIDs) {
-        try {
-            const command = new GetCommand({
-                TableName: Resource.TeamsTable.name, // Replace with your actual teams table name
-                Key: {
-                    teamID: teamID,
-                },
-            });
-
-            const response = await documentClient.send(command);
-
-            if (response.Item) {
-                const team = response.Item as Team;
-                teamTitles[teamID] = team.teamName;
-            }
-        } catch (error) {
-            console.error(`Failed to retrieve team title for teamID ${teamID}`, error);
-        }
-    }
-    return teamTitles;
 }
 
 export async function GET(request: NextRequest) {
@@ -154,24 +92,16 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // Step 1: Get user's teams
-        const teamIDs = await getUserTeams(userID);
+        // Step 1: Get chats associated with the user's ID directly
+        const userChats = await getChatsByUserID(userID);
 
-        // Step 2: Get team titles mapping
-        const teamTitles = await getTeamTitles(teamIDs);
-
-        // Step 3: Initialize Chat objects array
+        // Step 2: Initialize Chat objects array
         const chats: Chat[] = [];
 
-        // Step 4: Get chats associated with user's teams
-        const teamChats = await getChatsByUserID(teamIDs);
-
-
-        // Step 5: Filter team chats based on editor access
-        for (const chat of teamChats) {
-            const editorsArray = Array.isArray(chat.editors) ? chat.editors : [];
-            const access = editorsArray.length === 0 || editorsArray.includes(userID);
-            if (!access) continue;
+        // Step 3: Filter user chats based on viewer access
+        for (const chat of userChats) {
+            // Check viewer permissions
+            if (chat.viewers.length > 0 && !chat.viewers.includes(userID)) continue;
 
             let messages: Message[] = [];
             try {
@@ -187,38 +117,10 @@ export async function GET(request: NextRequest) {
                 chatTitle: chat.chatTitle,
                 timestamp: chat.timestamp,
                 messages,
-                groupID: chat.chatGroupID,
-                groupTitle: chat.chatGroup,
-                teamID: chat.userID, // This is the teamID in this context
-                teamTitle: teamTitles[chat.userID] || 'Unknown Team', // Use the retrieved title or a fallback
+                brainID: chat.brainID,
             });
         }
 
-        // Step 6: Get chats associated with the user's ID directly
-        const userChats = await getChatsByUserID([userID]);
-
-        // Step 7: Filter user chats based on viewer access
-        for (const chat of userChats) {
-            if (chat.viewers.length > 0 && !chat.viewers.includes(userID)) continue;
-
-            // Retrieve messages from S3
-            const messages = await getMessagesFromS3(chat.chatID);
-
-            chats.push({
-                chatID: chat.chatID,
-                chatTitle: chat.chatTitle,
-                timestamp: chat.timestamp,
-                messages,
-                groupID: chat.chatGroupID,
-                groupTitle: chat.chatGroup,
-                teamID: chat.userID === userID ? undefined : chat.userID,
-                teamTitle: chat.userID === userID ? undefined : teamTitles[chat.userID] || 'Unknown Team',
-            });
-        }
-
-        
-
-        
         // Return the list of chats
         return NextResponse.json(chats, { status: 200 });
     } catch (error) {

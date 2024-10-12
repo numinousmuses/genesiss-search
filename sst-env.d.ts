@@ -13,6 +13,10 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Dynamo"
     }
+    "GenesissAgents": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
     "GenesissAgentsAPIKey": {
       "type": "sst.sst.Secret"
       "value": string
@@ -28,10 +32,6 @@ declare module "sst" {
     "GenesissAgentsSessionsTable": {
       "name": string
       "type": "sst.aws.Dynamo"
-    }
-    "GenesissSearch": {
-      "type": "sst.aws.Nextjs"
-      "url": string
     }
     "TeamsTable": {
       "name": string

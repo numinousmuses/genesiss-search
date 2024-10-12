@@ -54,7 +54,7 @@ export default $config({
     });
 
 
-    new sst.aws.Nextjs("GenesissSearch", {
+    new sst.aws.Nextjs("GenesissAgents", {
       link: [
         bucket,
         publicbucket,
