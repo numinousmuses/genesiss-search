@@ -104,3 +104,139 @@
         gap: 0.7rem;
     }
 }
+
+.workflowContainer {
+    display: grid;
+    gap: 30px;
+    padding: 20px;
+    grid-auto-flow: dense;
+    grid-template-columns: repeat(auto-fill, 300px);
+    width: 100%;
+    overflow: auto;
+}
+
+.box {
+    background-color: #333;
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-family: CreatoLight, sans-serif;
+    width: 300px;
+    height: 150px;
+    cursor: pointer;
+}
+
+.addButton {
+    position: absolute;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.addButton:hover {
+    transform: scale(1.1);
+}
+
+/* Positioning for the right button */
+.addButton:nth-of-type(1) {
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #ffffff;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+}
+
+/* Positioning for the bottom button (only in the first column) */
+.addButton:nth-of-type(2) {
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffffff;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+
+}
+
+@media screen and (max-width: 600px) {
+    .box {
+        padding: 8px;
+    }
+}
+
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.popupContent {
+    background: #333;
+    padding: 20px;
+    border-radius: 8px;
+    color: white;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.popupContent h2 {
+    margin: 0;
+}
+
+.popupContent label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.popupContent button {
+    margin-top: 10px;
+}
+
+.popupContent label input{
+    /* turn off input decorations */
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.popupContent label select {
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.buttonsFooter{
+    display: flex;
+    gap: 10px;
+}
+
+
+/* .popupContent label input:focus {
+    border: 1px solid #ff6347;
+} */
