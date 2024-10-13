@@ -287,7 +287,7 @@ export default function Workflows() {
                             style={{ gridRow: box.position.row + 1, gridColumn: box.position.col + 1 }}
                             onClick={() => handleEditBox(box.id)}
                         >
-                            <strong>{box.agent ? `${box.agent} Agent` : "ALERT: Configure or Delete This Agent"}</strong>
+                            <strong>{box.agent ? `${box.agent} agent` : "ALERT: Configure or Delete This Agent"}</strong>
                             {box.prompt && <p>{box.prompt.length > 15 ? `${box.prompt.slice(0, 20)}...` : box.prompt}</p>}
                             <button onClick={(e) => { e.stopPropagation(); handleAddRight(box); }} className={styles.addButton}>+</button>
                             {box.position.col === 0 && (
@@ -309,7 +309,7 @@ export default function Workflows() {
                                 <option value="codegen">Codegen</option>
                                 <option value="graphgen">Graphgen</option>
                                 <option value="imagegen">Imagegen</option>
-                                <option value="docucomp">Docucomp</option>
+                                <option value="docugen">Docugen</option>
                                 <option value="memstore">Memstore</option>
                                 <option value="memsearch">Memsearch</option>
                                 <option value="simplechat">Simplechat</option>

@@ -25,7 +25,7 @@ interface Workflow {
 }
 
 interface WorkflowAgentArray {
-  agentID: "internet" | "codegen" | "graphgen" | "imagegen" | "docucomp" | "memstore" | "memsearch" | "simplechat" | "presentgen";
+  agentID: "internet" | "codegen" | "graphgen" | "imagegen" | "docugen" | "memstore" | "memsearch" | "simplechat" | "presentgen";
   inputs: any[]
 }
 
@@ -131,6 +131,7 @@ export default function Workflows() {
   }, [router, session]);
 
   const fetchWorkflows = async (userId: string) => {
+
     try {
       const response = await fetch(`/api/workflow/${userId}`);
       if (response.ok) {
@@ -218,6 +219,30 @@ export default function Workflows() {
     return selectedWorkflow.outputs.reduce((sum, output) => sum + output.creditsConsumed, 0);
   };
 
+  const handleDeleteWorkflow = async () => {
+    if (!selectedWorkflow) return;
+  
+    const confirmDelete = window.confirm("Are you sure you want to delete this workflow?");
+    if (!confirmDelete) return;
+  
+    try {
+      const response = await fetch(`/api/workflow/${session?.userId}/${selectedWorkflow.title}`, {
+        method: "DELETE",
+      });
+  
+      if (response.ok) {
+        alert("Workflow deleted successfully.");
+        setSelectedWorkflow(null);
+        fetchWorkflows(session?.userId!); // Refresh workflows list
+      } else {
+        alert("Failed to delete workflow.");
+      }
+    } catch (error) {
+      console.error("Error deleting workflow:", error);
+    }
+  };
+  
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -253,12 +278,15 @@ export default function Workflows() {
                 <p>Last Run: {selectedWorkflow.outputs[selectedWorkflow.outputs.length - 1]?.runDate}</p>
                 <strong>Description: </strong>
                 <p>{selectedWorkflow.description}</p>
+                
+
                 <div className={styles.workflowTags}>
                   <p><strong>Status: </strong>{selectedWorkflow.outputs[selectedWorkflow.outputs.length - 1]?.status}</p>
                   <p><strong>Frequency: </strong>{selectedWorkflow.frequency}</p>
                   
                   <p><strong>Average Credits Consumed per Run: </strong>{calculateAverageCredits()}</p>
                   <p><strong>Total Credits Consumed: </strong>{calculateTotalCredits()}</p>
+                  <button onClick={handleDeleteWorkflow} className={styles.deleteButton}>Delete Workflow</button>
                 </div>
               </div>
             </div>
