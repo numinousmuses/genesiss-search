@@ -100,6 +100,16 @@ interface Chat {
     teamTitle?: string
 }
 
+interface Workflow {
+    title: string,
+    jobID: string,
+    userID: string,
+    description: string,
+    frequency: string,
+    createdAt: string,
+    outputs: string,
+}
+
 // retrieving chats for a user: 
 get user teams, 
 initialize array of Chat objects

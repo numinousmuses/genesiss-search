@@ -53,6 +53,17 @@ export default $config({
       primaryIndex: { hashKey: "teamID" }
     });
 
+    const workflowstable = new sst.aws.Dynamo("WorkflowsTable", {
+      fields: {
+        jobID: "string",
+        userID: "string",
+      },
+      primaryIndex: { hashKey: "jobID" },
+      globalIndexes: {
+        UserIDIndex: { hashKey: "userID" }
+      }
+    });
+
 
     new sst.aws.Nextjs("GenesissAgents", {
       link: [
@@ -62,7 +73,8 @@ export default $config({
         SessionsTable,
         finaluserstable,
         chatstable,
-        teamstable
+        teamstable,
+        workflowstable
       ],
       domain: "agents.genesiss.tech",
     });

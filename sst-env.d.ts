@@ -37,5 +37,9 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Dynamo"
     }
+    "WorkflowsTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
   }
 }

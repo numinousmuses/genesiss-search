@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resource } from 'sst';
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+
+const dynamoDbClient = new DynamoDBClient({ region: "us-east-1" });
+const documentClient = DynamoDBDocumentClient.from(dynamoDbClient);
 
 interface WorkflowAgentArray {
     agentID: string;
@@ -38,6 +45,15 @@ export interface ExecutedAgents {
     state?: string; // Optional state value
     brainID?: string; // Optional brainID for memory operations
     agents: CalledAgent[][]; // 2D array of called agents, each sub-array representing a group of agents executed in order
+}
+
+interface DatabaseWorkflow {
+    title: string,
+    jobID: string,
+    userID: string,
+    description: string,
+    frequency: string,
+    createdAt: string,
 }
 
 export async function POST(request: NextRequest) {
@@ -80,7 +96,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: errorText }, { status: response.status });
         }
 
-        const responseData = await response.json();
+        const responseData = await response.json() as {jobID: string, success: boolean};
+
+        // create and store workflow in DB
+
+        const params: DatabaseWorkflow = {
+            title: data.WorkflowConfiguration.title,
+            jobID: responseData.jobID,
+            userID: data.userID,
+            description: data.WorkflowConfiguration.description,
+            frequency: data.WorkflowConfiguration.frequency,
+            createdAt: data.WorkflowConfiguration.createdAt,
+        }
+
+        const newChatCommand = new PutCommand({
+            TableName: Resource.WorkflowsTable.name, // Replace with your actual chats table name
+            Item: params,
+          });
+        
+        await documentClient.send(newChatCommand);
+
         console.log("Response Data:", responseData);
         return NextResponse.json("Job request sent successfully", { status: 200 });
     } catch (error) {

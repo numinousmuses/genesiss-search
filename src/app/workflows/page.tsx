@@ -133,7 +133,13 @@ export default function Workflows() {
   const fetchWorkflows = async (userId: string) => {
 
     try {
-      const response = await fetch(`/api/workflow/${userId}`);
+      const response = await fetch(`/api/workflows`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userID: userId }),
+      });
       if (response.ok) {
         const data = await response.json();
         setWorkflows(data);
@@ -226,8 +232,10 @@ export default function Workflows() {
     if (!confirmDelete) return;
   
     try {
-      const response = await fetch(`/api/workflow/${session?.userId}/${selectedWorkflow.title}`, {
+      const response = await fetch(`/api/workflow/delete`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userID: session?.userId!, workflowID: selectedWorkflow.title }),
       });
   
       if (response.ok) {
