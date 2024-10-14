@@ -5,6 +5,10 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
+    "CanvasChatsTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
     "ChatsTable": {
       "name": string
       "type": "sst.aws.Dynamo"

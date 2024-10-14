@@ -1,0 +1,515 @@
+
+.canvasContainer{
+  all: unset;
+}
+
+.fileInputContainer {
+  display: inline-block;
+  position: relative;
+}
+
+.customFileUpload {
+  display: inline-block;
+  color: rgb(208, 208, 208); /* Custom text color */
+  cursor: pointer;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+  transition: color 0.3s ease-in-out;
+}
+
+.customFileUpload:hover {
+  color: white;
+}
+
+.inputContainer input[type="file"] {
+  display: none; /* Hide the default file input */
+}
+
+
+/* From Uiverse.io by JkHuger */ 
+@keyframes loader_5191 {
+from {
+  opacity: 0;
+}
+
+to {
+  opacity: 1;
+}
+}
+
+.loading {
+
+/* position: absolute;
+top: 50%;
+left: 50%;
+margin-top: -5px;
+margin-left: -5px; */
+text-align: center;
+}
+
+.noMessages{
+/* position: absolute;
+top: 50%;
+left: 25%;
+margin-left: -135px; */
+text-align: center;
+}
+
+.permissionsTable{}
+
+.permissionsTable{
+width: 100%;
+
+}
+
+.permissionsSection{
+max-height: 400px;
+overflow-y: scroll;
+scrollbar-color: #000000 #ffffff;
+}
+
+.permissionsTable tbody td{
+text-align: center;
+}
+
+.modalContent {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 10px;
+margin-top: 20px;
+margin-bottom: 20px;
+text-align: center;
+}
+
+.modal input {
+background-color: black;
+color: white;
+height: 33px;
+padding: 5px;
+border-radius: 5px;
+}
+
+.modalContent button {
+background-color: black;
+color: white;
+border: none;
+}
+
+.modalContent button {
+transition: all 300ms;
+border: none;
+padding: 0.5rem 1rem;
+border-radius: 5px;
+cursor: pointer;
+width: 250px;
+transition: all 300ms;
+}
+
+.modalContent button:hover {
+scale: 0.95;
+}
+
+.modalContent input{
+background-color: black;
+color: white;
+border: none;
+padding-left: 10px;
+}
+
+.modalContent ul{
+list-style: none;
+}
+
+.deleteButton{
+transition: all 300ms;
+}
+
+.modalContent .deleteButton:hover{
+scale: 1.1;
+background-color: rgb(255, 104, 104);
+}
+
+.closeButton{
+transition: all 300ms;
+}
+
+.closeButton:hover{
+background-color: rgb(57, 186, 255);
+}
+
+.agentMenu{
+background-color: #ffffff;
+color: #000000;
+position: absolute;
+bottom: 60px;
+padding-left: 10px;
+padding-right: 10px;
+padding-top: 5px;
+padding-bottom: 5px;
+display: flex;
+gap: 5px;
+flex-wrap: wrap;
+border-radius: 5px;
+}
+
+.agentMenuItem{
+transition: all 300ms;
+padding: 5px;
+border-radius: 5px;
+cursor: pointer;
+}
+
+.agentMenuItem:hover{
+background-color: #111111;
+color: #ffffff;
+}
+
+.agentMentionInstance {
+color: #007bff; /* Or any color/style you prefer */
+font-weight: bold;
+font-size: 100px;
+}
+
+.selectedAgentDisplay{
+background-color: #d1e7dd;
+color: #0f5132;
+padding: 2px 4px;
+border-radius: 4px;
+display: inline-block;
+position: absolute;
+bottom: 60px;
+};
+
+
+
+.ProseMirror .is-editor-empty:first-child::before {
+content: attr(data-placeholder);
+float: left;
+color: hsl(var(--muted-foreground));
+pointer-events: none;
+height: 0;
+}
+.ProseMirror .is-empty::before {
+content: attr(data-placeholder);
+float: left;
+color: hsl(var(--muted-foreground));
+pointer-events: none;
+height: 0;
+}
+
+/* Custom image styles */
+
+.ProseMirror img {
+transition: filter 0.1s ease-in-out;
+
+&:hover {
+  cursor: pointer;
+  filter: brightness(90%);
+}
+
+&.ProseMirror-selectednode {
+  outline: 3px solid #5abbf7;
+  filter: brightness(90%);
+}
+}
+
+.img-placeholder {
+position: relative;
+
+&:before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--novel-stone-200);
+  border-top-color: var(--novel-stone-800);
+  animation: spinning 0.6s linear infinite;
+}
+}
+
+@keyframes spinning {
+to {
+  transform: rotate(360deg);
+}
+}
+
+/* Custom TODO list checkboxes – shoutout to this awesome tutorial: https://moderncss.dev/pure-css-custom-checkbox-style/ */
+
+.taskList ul[data-type="taskList"] li > label {
+margin-right: 0.2rem;
+user-select: none;
+}
+
+@media screen and (max-width: 768px) {
+.taskList ul[data-type="taskList"] li > label {
+  margin-right: 0.5rem;
+}
+}
+
+.taskList ul[data-type="taskList"] li > label input[type="checkbox"] {
+-webkit-appearance: none;
+appearance: none;
+background-color: hsl(var(--background));
+margin: 0;
+cursor: pointer;
+width: 1.2em;
+height: 1.2em;
+position: relative;
+top: 5px;
+border: 2px solid hsl(var(--border));
+margin-right: 0.3rem;
+display: grid;
+place-content: center;
+
+&:hover {
+  background-color: hsl(var(--accent));
+}
+
+&:active {
+  background-color: hsl(var(--accent));
+}
+
+&::before {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em;
+  transform-origin: center;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+&:checked::before {
+  transform: scale(1);
+}
+}
+
+.taskList ul[data-type="taskList"] li[data-checked="true"] > div > p {
+color: var(--muted-foreground);
+text-decoration: line-through;
+text-decoration-thickness: 2px;
+}
+
+/* Overwrite tippy-box original max-width */
+
+.tippy-box {
+max-width: 400px !important;
+}
+
+.ProseMirror:not(.dragging) .ProseMirror-selectednode {
+outline: none !important;
+background-color: var(--novel-highlight-blue);
+transition: background-color 0.2s;
+box-shadow: none;
+}
+
+.drag-handle {
+position: fixed;
+opacity: 1;
+transition: opacity ease-in 0.2s;
+border-radius: 0.25rem;
+
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' style='fill: rgba(0, 0, 0, 0.5)'%3E%3Cpath d='M3,2 C2.44771525,2 2,1.55228475 2,1 C2,0.44771525 2.44771525,0 3,0 C3.55228475,0 4,0.44771525 4,1 C4,1.55228475 3.55228475,2 3,2 Z M3,6 C2.44771525,6 2,5.55228475 2,5 C2,4.44771525 2.44771525,4 3,4 C3.55228475,4 4,4.44771525 4,5 C4,5.55228475 3.55228475,6 3,6 Z M3,10 C2.44771525,10 2,9.55228475 2,9 C2,8.44771525 2.44771525,8 3,8 C3.55228475,8 4,8.44771525 4,9 C4,9.55228475 3.55228475,10 3,10 Z M7,2 C6.44771525,2 6,1.55228475 6,1 C6,0.44771525 6.44771525,0 7,0 C7.55228475,0 8,0.44771525 8,1 C8,1.55228475 7.55228475,2 7,2 Z M7,6 C6.44771525,6 6,5.55228475 6,5 C6,4.44771525 6.44771525,4 7,4 C7.55228475,4 8,4.44771525 8,5 C8,5.55228475 7.55228475,6 7,6 Z M7,10 C6.44771525,10 6,9.55228475 6,9 C6,8.44771525 6.44771525,8 7,8 C7.55228475,8 8,8.44771525 8,9 C8,9.55228475 7.55228475,10 7,10 Z'%3E%3C/path%3E%3C/svg%3E");
+background-size: calc(0.5em + 0.375rem) calc(0.5em + 0.375rem);
+background-repeat: no-repeat;
+background-position: center;
+width: 1.2rem;
+height: 1.5rem;
+z-index: 50;
+cursor: grab;
+
+&:hover {
+  background-color: var(--novel-stone-100);
+  transition: background-color 0.2s;
+}
+
+&:active {
+  background-color: var(--novel-stone-200);
+  transition: background-color 0.2s;
+  cursor: grabbing;
+}
+
+&.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media screen and (max-width: 600px) {
+  display: none;
+  pointer-events: none;
+}
+}
+
+.dark .drag-handle {
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' style='fill: rgba(255, 255, 255, 0.5)'%3E%3Cpath d='M3,2 C2.44771525,2 2,1.55228475 2,1 C2,0.44771525 2.44771525,0 3,0 C3.55228475,0 4,0.44771525 4,1 C4,1.55228475 3.55228475,2 3,2 Z M3,6 C2.44771525,6 2,5.55228475 2,5 C2,4.44771525 2.44771525,4 3,4 C3.55228475,4 4,4.44771525 4,5 C4,5.55228475 3.55228475,6 3,6 Z M3,10 C2.44771525,10 2,9.55228475 2,9 C2,8.44771525 2.44771525,8 3,8 C3.55228475,8 4,8.44771525 4,9 C4,9.55228475 3.55228475,10 3,10 Z M7,2 C6.44771525,2 6,1.55228475 6,1 C6,0.44771525 6.44771525,0 7,0 C7.55228475,0 8,0.44771525 8,1 C8,1.55228475 7.55228475,2 7,2 Z M7,6 C6.44771525,6 6,5.55228475 6,5 C6,4.44771525 6.44771525,4 7,4 C7.55228475,4 8,4.44771525 8,5 C8,5.55228475 7.55228475,6 7,6 Z M7,10 C6.44771525,10 6,9.55228475 6,9 C6,8.44771525 6.44771525,8 7,8 C7.55228475,8 8,8.44771525 8,9 C8,9.55228475 7.55228475,10 7,10 Z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+
+.container{
+  display: flex;
+  justify-content: center;
+}
+
+.canvas {
+  width: 50%;
+  height: 100vh;
+}
+
+.canvasContainer{
+  height: 100%;
+}
+
+.page{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+    width: 50%;
+}
+ 
+.pageHeader{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 40px;
+}
+
+.backButton, .settings{
+    color: rgb(135, 135, 135);
+    transition: all 0.3s ease-in-out;
+    background-color: rgb(0, 0, 0);
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.backButton:hover, .settings:hover{
+    color: rgb(0, 0, 0);
+    background-color: rgb(215, 215, 215);
+    cursor: pointer;
+}
+
+.pageFooter{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 40px;
+}
+
+.inputContainer{
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 40px;
+    gap: 10px;
+    background-color: #111111;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.inputContainer input{
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    color: white;
+}
+
+.uploadButton{
+    color: rgb(172, 172, 172);
+    transition: all 0.3s ease-in-out;
+}
+
+.uploadButton:hover{
+    color: white;
+    cursor: pointer;
+}
+
+.sendButton{
+    background-color: #b3b3b3;
+    transition: all 0.3s ease-in-out;
+    border: none;
+    color: black;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.sendButton:hover{
+    background-color: #ffffff;
+    cursor: pointer;
+}
+
+.pageBody{
+    width: 50%;
+    height: 100vh;
+    overflow-y: scroll;
+    scrollbar-color: rgb(255, 255, 255) rgb(0, 0, 0);
+
+}
+
+.systemMessage, .userMessage{
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.systemMessage{
+
+}
+
+.userMessage{
+    background-color: rgb(27, 27, 27);
+}
+
+
+/* .selectedAgentDisplay {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.selectedAgent {
+  color: #007bff;
+  background-color: #e6f2ff;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.agentMenu {
+  position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 5px;
+  z-index: 100;
+  max-height: 150px;
+  overflow-y: auto;
+  width: 200px;
+}
+
+.agentMenuItem {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.agentMenuItem:hover {
+  background-color: #f0f0f0;
+} */

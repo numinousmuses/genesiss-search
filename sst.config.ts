@@ -46,6 +46,17 @@ export default $config({
       }
     });
 
+    const canvaschatstable = new sst.aws.Dynamo("CanvasChatsTable", {
+      fields: {
+        chatID: "string",
+        userID: "string",
+      },
+      primaryIndex: { hashKey: "chatID" },
+      globalIndexes: {
+        CreatedAtIndex: { hashKey: "userID" }
+      }
+    });
+
     const teamstable = new sst.aws.Dynamo("TeamsTable", {
       fields: {
         teamID: "string",
@@ -74,7 +85,8 @@ export default $config({
         finaluserstable,
         chatstable,
         teamstable,
-        workflowstable
+        workflowstable,
+        canvaschatstable
       ],
       domain: "agents.genesiss.tech",
     });

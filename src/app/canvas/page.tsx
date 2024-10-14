@@ -87,7 +87,7 @@ export default function Dashboard() {
 
       try {
         // Fetch chats for the user
-        const chatResponse = await fetch(`/api/chats/${session.userId}`);
+        const chatResponse = await fetch(`/api/canvaschat/${session.userId}`);
         if (chatResponse.ok) {
           const chatData: Chat[] = await chatResponse.json();
           setChats(chatData);
@@ -156,7 +156,7 @@ export default function Dashboard() {
       <div
         key={chat.chatID}
         className={styles.chatBox}
-        onClick={() => router.push(`/chat/${chat.chatID}`)}
+        onClick={() => router.push(`/canvaschat/${chat.chatID}`)}
       >
         {chat.chatTitle}
       </div>
@@ -332,22 +332,6 @@ export default function Dashboard() {
   const openSettingsModal = () => setIsSettingsModalOpen(true); // Open Settings modal
   const closeSettingsModal = () => setIsSettingsModalOpen(false); // Close Settings modal
 
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        {letters.map((letter, index) => (
-          <span
-            key={index}
-            className={`${styles.letter} ${
-              visibleLetters.includes(index) ? styles.fadeIn : styles.fadeOut
-            } ${index >= 8 ? styles.agentsColor : ''}`} // Apply agentsColor class to indices 8 and above
-          >
-            {letter}
-          </span>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className={styles.page}>
@@ -367,11 +351,8 @@ export default function Dashboard() {
           )}
         </div>
         <div className={styles.settings}>
-          <button onClick={openCreateChatModal} className={styles.createChatButton}>
-            New Chat
-          </button>
-          <button onClick={() => router.push('/canvas')}className={styles.createCanvasChatButton}>Canvas</button>
-          <button className={styles.logoutButton} onClick={() => router.push('/workflows')}>Workflows</button>
+          <button onClick={openCreateCanvasChatModal} className={styles.createCanvasChatButton}>Canvas</button>
+          <button className={styles.logoutButton} onClick={() => router.push('/dashboard')}>Dashboard</button>
           <button className={styles.settingsButton} onClick={openSettingsModal}>
             Settings
           </button>
