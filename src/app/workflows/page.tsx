@@ -22,6 +22,7 @@ interface Workflow {
   frequency: string;
   createdAt: string;
   outputs: WorkflowOutput[];
+  jobID?: string;
 }
 
 interface WorkflowAgentArray {
@@ -235,7 +236,7 @@ export default function Workflows() {
       const response = await fetch(`/api/workflow/delete`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID: session?.userId!, workflowID: selectedWorkflow.title }),
+        body: JSON.stringify({ userID: session?.userId!, workflowID: selectedWorkflow.jobID }),
       });
   
       if (response.ok) {

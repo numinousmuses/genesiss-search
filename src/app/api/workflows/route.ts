@@ -22,6 +22,7 @@ interface Workflow {
     description: string;
     frequency: string;
     createdAt: string;
+    jobID: string;
     outputs: WorkflowOutput[];
 }
 
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
                     description: dbWorkflow.description,
                     frequency: dbWorkflow.frequency,
                     createdAt: dbWorkflow.createdAt,
+                    jobID: dbWorkflow.jobID,
                     outputs: outputs,
                 };
             })
